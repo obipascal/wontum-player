@@ -1,0 +1,53 @@
+{
+	"name": "@wontum/player",
+	"version": "1.0.0",
+	"description": "A modern HLS video player SDK for educational platforms with S3 integration",
+	"main": "dist/wontum-player.cjs.js",
+	"module": "dist/wontum-player.esm.js",
+	"types": "dist/index.d.ts",
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"preview": "vite preview",
+		"type-check": "tsc --noEmit"
+	},
+	"keywords": [
+		"video",
+		"player",
+		"hls",
+		"streaming",
+		"s3",
+		"edutech",
+		"education"
+	],
+	"author": "",
+	"license": "MIT",
+	"devDependencies": {
+		"@types/node": "^20.10.0",
+		"@types/react": "^19.2.8",
+		"@types/react-dom": "^19.2.3",
+		"react": "^19.2.3",
+		"react-dom": "^19.2.3",
+		"typescript": "^5.3.3",
+		"vite": "^5.0.8",
+		"vite-plugin-dts": "^3.7.0"
+	},
+	"dependencies": {
+		"hls.js": "^1.5.1"
+	},
+	"peerDependencies": {
+		"react": "^18.0.0",
+		"react-dom": "^18.0.0"
+	},
+	"peerDependenciesMeta": {
+		"react": {
+			"optional": true
+		},
+		"react-dom": {
+			"optional": true
+		}
+	}
+}

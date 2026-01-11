@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Wontum Player - Demo</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			body {
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+				background: #f5f5f5;
+				padding: 20px;
+			}
+
+			.container {
+				max-width: 1200px;
+				margin: 0 auto;
+			}
+
+			h1 {
+				font-size: 32px;
+				margin-bottom: 10px;
+				color: #333;
+			}
+
+			p {
+				color: #666;
+				margin-bottom: 30px;
+			}
+
+			.player-wrapper {
+				background: #000;
+				border-radius: 8px;
+				overflow: hidden;
+				margin-bottom: 30px;
+				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+			}
+
+			#player {
+				width: 100%;
+				height: 600px;
+			}
+
+			.controls-panel {
+				background: white;
+				padding: 20px;
+				border-radius: 8px;
+				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+				margin-bottom: 20px;
+			}
+
+			.controls-panel h2 {
+				font-size: 20px;
+				margin-bottom: 15px;
+				color: #333;
+			}
+
+			.button-group {
+				display: flex;
+				gap: 10px;
+				margin-bottom: 20px;
+				flex-wrap: wrap;
+			}
+
+			button {
+				padding: 10px 20px;
+				background: #3b82f6;
+				color: white;
+				border: none;
+				border-radius: 6px;
+				cursor: pointer;
+				font-size: 14px;
+				transition: background 0.2s;
+			}
+
+			button:hover {
+				background: #2563eb;
+			}
+
+			button:active {
+				background: #1d4ed8;
+			}
+
+			.state-display {
+				background: #f9fafb;
+				padding: 15px;
+				border-radius: 6px;
+				font-family: "Courier New", monospace;
+				font-size: 13px;
+				line-height: 1.6;
+				color: #374151;
+				overflow-x: auto;
+			}
+
+			.input-group {
+				margin-bottom: 15px;
+			}
+
+			.input-group label {
+				display: block;
+				margin-bottom: 5px;
+				color: #374151;
+				font-size: 14px;
+				font-weight: 500;
+			}
+
+			.input-group input {
+				width: 100%;
+				padding: 8px 12px;
+				border: 1px solid #d1d5db;
+				border-radius: 6px;
+				font-size: 14px;
+			}
+
+			.metrics {
+				background: white;
+				padding: 20px;
+				border-radius: 8px;
+				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			}
+
+			.metrics h2 {
+				font-size: 20px;
+				margin-bottom: 15px;
+				color: #333;
+			}
+
+			.metric-item {
+				display: flex;
+				justify-content: space-between;
+				padding: 10px 0;
+				border-bottom: 1px solid #e5e7eb;
+			}
+
+			.metric-item:last-child {
+				border-bottom: none;
+			}
+
+			.metric-label {
+				color: #6b7280;
+				font-size: 14px;
+			}
+
+			.metric-value {
+				color: #111827;
+				font-weight: 600;
+				font-size: 14px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1>🎬 Wontum Player Demo</h1>
+			<p>A modern HLS video player for educational platforms with S3 integration</p>
+
+			<div class="player-wrapper">
+				<div id="player"></div>
+			</div>
+
+			<div class="controls-panel">
+				<h2>Player Controls</h2>
+
+				<div class="input-group">
+					<label for="video-url">Video URL (HLS .m3u8)</label>
+					<input type="text" id="video-url" placeholder="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" value="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" />
+				</div>
+
+				<div class="button-group">
+					<button onclick="loadVideo()">Load Video</button>
+					<button onclick="playVideo()">Play</button>
+					<button onclick="pauseVideo()">Pause</button>
+					<button onclick="seek(10)">+10s</button>
+					<button onclick="seek(-10)">-10s</button>
+					<button onclick="setSpeed(0.5)">0.5x</button>
+					<button onclick="setSpeed(1)">1x</button>
+					<button onclick="setSpeed(1.5)">1.5x</button>
+					<button onclick="setSpeed(2)">2x</button>
+					<button onclick="toggleMute()">Mute/Unmute</button>
+					<button onclick="toggleFullscreen()">Fullscreen</button>
+				</div>
+
+				<h2>Player State</h2>
+				<div class="state-display" id="state-display">Initializing player...</div>
+			</div>
+
+			<div class="metrics">
+				<h2>Analytics & QoE Metrics</h2>
+				<div id="metrics-display">
+					<div class="metric-item">
+						<span class="metric-label">Total Play Time</span>
+						<span class="metric-value" id="play-time">0s</span>
+					</div>
+					<div class="metric-item">
+						<span class="metric-label">Total Buffer Time</span>
+						<span class="metric-value" id="buffer-time">0s</span>
+					</div>
+					<div class="metric-item">
+						<span class="metric-label">Buffering Ratio</span>
+						<span class="metric-value" id="buffer-ratio">0%</span>
+					</div>
+					<div class="metric-item">
+						<span class="metric-label">Rebuffer Count</span>
+						<span class="metric-value" id="rebuffer-count">0</span>
+					</div>
+					<div class="metric-item">
+						<span class="metric-label">Seek Count</span>
+						<span class="metric-value" id="seek-count">0</span>
+					</div>
+					<div class="metric-item">
+						<span class="metric-label">Event Count</span>
+						<span class="metric-value" id="event-count">0</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script type="module">
+			import { WontumPlayer } from "./src/index.ts"
+
+			let player
+
+			function initPlayer(src) {
+				// Destroy existing player if any
+				if (player) {
+					player.destroy()
+				}
+
+				player = new WontumPlayer({
+					src: src || "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+					container: "#player",
+					autoplay: false,
+					muted: false,
+					controls: true,
+					analytics: {
+						enabled: true,
+						videoId: "demo-video",
+						userId: "demo-user",
+					},
+				})
+
+				// Setup event listeners
+				player.on("play", () => updateState())
+				player.on("pause", () => updateState())
+				player.on("timeupdate", () => updateState())
+				player.on("volumechange", () => updateState())
+				player.on("loadedmetadata", () => updateState())
+				player.on("ratechange", () => updateState())
+				player.on("qualitychange", () => updateState())
+
+				// Update metrics every second
+				setInterval(updateMetrics, 1000)
+			}
+
+			function updateState() {
+				const state = player.getState()
+				const display = document.getElementById("state-display")
+
+				display.textContent = JSON.stringify(
+					{
+						playing: state.playing,
+						paused: state.paused,
+						currentTime: Math.round(state.currentTime * 10) / 10,
+						duration: Math.round(state.duration * 10) / 10,
+						volume: Math.round(state.volume * 100) / 100,
+						muted: state.muted,
+						playbackRate: state.playbackRate,
+						quality: state.quality,
+						buffering: state.buffering,
+						fullscreen: state.fullscreen,
+					},
+					null,
+					2,
+				)
+			}
+
+			function updateMetrics() {
+				if (!player) return
+
+				const metrics = player.analytics.getMetrics()
+
+				document.getElementById("play-time").textContent = Math.round(metrics.totalPlayTime / 1000) + "s"
+				document.getElementById("buffer-time").textContent = Math.round(metrics.totalBufferTime / 1000) + "s"
+				document.getElementById("buffer-ratio").textContent = Math.round(metrics.bufferingRatio * 100) + "%"
+				document.getElementById("rebuffer-count").textContent = metrics.rebufferCount
+				document.getElementById("seek-count").textContent = metrics.seekCount
+				document.getElementById("event-count").textContent = metrics.eventCount
+			}
+
+			// Global functions for buttons
+			window.loadVideo = () => {
+				const url = document.getElementById("video-url").value
+				initPlayer(url)
+			}
+
+			window.playVideo = () => player?.play()
+			window.pauseVideo = () => player?.pause()
+			window.seek = (offset) => {
+				const state = player?.getState()
+				if (state) {
+					player.seek(state.currentTime + offset)
+				}
+			}
+			window.setSpeed = (rate) => player?.setPlaybackRate(rate)
+			window.toggleMute = () => {
+				const state = player?.getState()
+				if (state?.muted) {
+					player.unmute()
+				} else {
+					player.mute()
+				}
+			}
+			window.toggleFullscreen = () => {
+				const state = player?.getState()
+				if (state?.fullscreen) {
+					player.exitFullscreen()
+				} else {
+					player.enterFullscreen()
+				}
+			}
+
+			// Initialize on load
+			initPlayer()
+		</script>
+	</body>
+</html>
