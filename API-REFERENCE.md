@@ -59,7 +59,7 @@ new WontumPlayer(config: WontumPlayerConfig): WontumPlayer
 
 **Example:**
 ```typescript
-import { WontumPlayer } from "@wontum/player"
+import { WontumPlayer } from "@obipascal/player"
 
 const player = new WontumPlayer({
 	src: "https://media.example.com/video/playlist.m3u8",
@@ -985,7 +985,7 @@ interface WontumPlayerReactProps extends WontumPlayerConfig {
 
 **Example:**
 ```tsx
-import { WontumPlayerReact } from "@wontum/player"
+import { WontumPlayerReact } from "@obipascal/player"
 import { useState } from "react"
 
 function VideoPlayer() {
@@ -1046,7 +1046,7 @@ function useWontumPlayer(
 
 **Example:**
 ```tsx
-import { useWontumPlayer } from "@wontum/player"
+import { useWontumPlayer } from "@obipascal/player"
 
 function CustomPlayer() {
 	const { containerRef, player, state } = useWontumPlayer({
@@ -1107,7 +1107,7 @@ function WontumPlayerProvider(props: {
 
 **Example:**
 ```tsx
-import { WontumPlayerProvider } from "@wontum/player"
+import { WontumPlayerProvider } from "@obipascal/player"
 
 function App() {
 	return (
@@ -1146,7 +1146,7 @@ function useWontumPlayerContext(): {
 
 **Example:**
 ```tsx
-import { useWontumPlayerContext } from "@wontum/player"
+import { useWontumPlayerContext } from "@obipascal/player"
 
 function ControlPanel() {
 	const { player, state } = useWontumPlayerContext()
@@ -1263,7 +1263,7 @@ Wontum Player includes 7 professionally designed themes:
 
 #### netflixTheme()
 ```typescript
-import { netflixTheme } from "@wontum/player"
+import { netflixTheme } from "@obipascal/player"
 
 const theme = netflixTheme()
 // Dark theme with Netflix red (#e50914)
@@ -1271,7 +1271,7 @@ const theme = netflixTheme()
 
 #### youtubeTheme()
 ```typescript
-import { youtubeTheme } from "@wontum/player"
+import { youtubeTheme } from "@obipascal/player"
 
 const theme = youtubeTheme()
 // Bright theme with YouTube red (#ff0000)
@@ -1279,7 +1279,7 @@ const theme = youtubeTheme()
 
 #### modernTheme()
 ```typescript
-import { modernTheme } from "@wontum/player"
+import { modernTheme } from "@obipascal/player"
 
 const theme = modernTheme()
 // Modern blue gradient theme (#3b82f6)
@@ -1287,7 +1287,7 @@ const theme = modernTheme()
 
 #### greenTheme()
 ```typescript
-import { greenTheme } from "@wontum/player"
+import { greenTheme } from "@obipascal/player"
 
 const theme = greenTheme()
 // Nature-inspired green theme (#10b981)
@@ -1295,7 +1295,7 @@ const theme = greenTheme()
 
 #### cyberpunkTheme()
 ```typescript
-import { cyberpunkTheme } from "@wontum/player"
+import { cyberpunkTheme } from "@obipascal/player"
 
 const theme = cyberpunkTheme()
 // Neon pink and purple theme (#ff006e)
@@ -1303,7 +1303,7 @@ const theme = cyberpunkTheme()
 
 #### pastelTheme()
 ```typescript
-import { pastelTheme } from "@wontum/player"
+import { pastelTheme } from "@obipascal/player"
 
 const theme = pastelTheme()
 // Soft pastel colors (#a78bfa)
@@ -1311,7 +1311,7 @@ const theme = pastelTheme()
 
 #### educationTheme()
 ```typescript
-import { educationTheme } from "@wontum/player"
+import { educationTheme } from "@obipascal/player"
 
 const theme = educationTheme()
 // Professional education platform theme (#3b82f6)
@@ -1324,7 +1324,7 @@ const theme = educationTheme()
 Quick access to common brand colors:
 
 ```typescript
-import { BrandPresets } from "@wontum/player"
+import { BrandPresets } from "@obipascal/player"
 
 // Blues
 BrandPresets.blue // #3b82f6

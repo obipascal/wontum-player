@@ -120,7 +120,7 @@ npm run build
 ### Vanilla JavaScript
 
 ```javascript
-import { WontumPlayer } from "@wontum/player"
+import { WontumPlayer } from "@obipascal/player"
 
 const player = new WontumPlayer({
 	src: "https://your-bucket.s3.amazonaws.com/video/playlist.m3u8",
@@ -136,7 +136,7 @@ player.on("pause", () => console.log("Paused"))
 ### React
 
 ```tsx
-import { WontumPlayerReact } from "@wontum/player"
+import { WontumPlayerReact } from "@obipascal/player"
 
 function VideoPlayer() {
 	return <WontumPlayerReact src="https://example.com/video.m3u8" width="100%" height="500px" onPlay={() => console.log("Playing")} onPause={() => console.log("Paused")} />
@@ -146,7 +146,7 @@ function VideoPlayer() {
 ### With S3 Presigned URLs
 
 ```typescript
-import { WontumPlayer } from "@wontum/player"
+import { WontumPlayer } from "@obipascal/player"
 
 async function getPresignedUrl(key: string): Promise<string> {
 	const response = await fetch(`/api/presigned-url?key=${key}`)
@@ -282,7 +282,7 @@ All documentation is included:
 
 ### NPM Package
 
-Ready to publish as `@wontum/player`
+Ready to publish as `@obipascal/player`
 
 ### Self-Hosted
 

@@ -329,7 +329,7 @@ Analytics.trackEvent()
 ### As NPM Package
 
 ```bash
-npm install @wontum/player
+npm install @obipascal/player
 ```
 
 ### As CDN

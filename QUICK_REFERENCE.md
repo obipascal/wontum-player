@@ -3,7 +3,7 @@
 ## 📦 Installation
 
 ```bash
-npm install @wontum/player hls.js
+npm install @obipascal/player hls.js
 ```
 
 ## 🎯 Basic Usage
@@ -11,7 +11,7 @@ npm install @wontum/player hls.js
 ### JavaScript
 
 ```javascript
-import { WontumPlayer } from "@wontum/player"
+import { WontumPlayer } from "@obipascal/player"
 
 const player = new WontumPlayer({
 	src: "https://example.com/video.m3u8",
@@ -22,7 +22,7 @@ const player = new WontumPlayer({
 ### React
 
 ```tsx
-import { WontumPlayerReact } from "@wontum/player"
+import { WontumPlayerReact } from "@obipascal/player"
 
 ;<WontumPlayerReact src="https://example.com/video.m3u8" width="100%" height="500px" />
 ```
@@ -108,7 +108,7 @@ const player = new WontumPlayer({
 ## ⚛️ React Hooks
 
 ```tsx
-import { useWontumPlayer } from "@wontum/player"
+import { useWontumPlayer } from "@obipascal/player"
 
 function CustomPlayer() {
 	const { containerRef, player, state } = useWontumPlayer({

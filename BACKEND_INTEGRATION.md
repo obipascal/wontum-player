@@ -211,7 +211,7 @@ export async function getVideoUrl(videoId: string): Promise<string> {
 }
 
 // Usage with Wontum Player
-import { WontumPlayer } from "@wontum/player"
+import { WontumPlayer } from "@obipascal/player"
 
 async function loadVideo(videoId: string) {
 	const videoUrl = await getVideoUrl(videoId)
@@ -517,7 +517,7 @@ app.use("/api/analytics", analyticsRoutes) // Public for analytics
 ### Frontend
 
 ```typescript
-import { WontumPlayerReact } from "@wontum/player"
+import { WontumPlayerReact } from "@obipascal/player"
 import { useEffect, useState } from "react"
 
 function VideoPlayer({ videoId, userId }: { videoId: string; userId: string }) {

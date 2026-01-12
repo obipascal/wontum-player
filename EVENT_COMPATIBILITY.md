@@ -66,7 +66,7 @@
 ### Vanilla JavaScript
 
 ```javascript
-import { WontumPlayer } from "@wontum/player"
+import { WontumPlayer } from "@obipascal/player"
 
 const player = new WontumPlayer({
 	src: "https://media.domain.com/video.m3u8",
@@ -90,7 +90,7 @@ player.on("qualitychange", (event) => {
 ### React
 
 ```tsx
-import { WontumPlayerReact } from "@wontum/player"
+import { WontumPlayerReact } from "@obipascal/player"
 
 ;<WontumPlayerReact
 	src="https://media.domain.com/video.m3u8"
@@ -115,7 +115,7 @@ With:
 
 ```javascript
 // Wontum Player
-import { WontumPlayer } from '@wontum/player';
+import { WontumPlayer } from '@obipascal/player';
 const player = new WontumPlayer({ ... });
 player.on('play', (e) => { ... });
 ```

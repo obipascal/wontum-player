@@ -37,13 +37,13 @@ A modern, feature-rich HLS video player SDK for educational platforms with Cloud
 ## 📦 Installation
 
 ```bash
-npm install @wontum/player hls.js
+npm install @obipascal/player hls.js
 ```
 
 Or with yarn:
 
 ```bash
-yarn add @wontum/player hls.js
+yarn add @obipascal/player hls.js
 ```
 
 ## 🚀 Quick Start
@@ -60,7 +60,7 @@ yarn add @wontum/player hls.js
 		<div id="player-container"></div>
 
 		<script type="module">
-			import { WontumPlayer } from "@wontum/player"
+			import { WontumPlayer } from "@obipascal/player"
 
 			const player = new WontumPlayer({
 				src: "https://media.example.com/video/playlist.m3u8",
@@ -110,7 +110,7 @@ yarn add @wontum/player hls.js
 ### React Component
 
 ```tsx
-import { WontumPlayerReact } from "@wontum/player"
+import { WontumPlayerReact } from "@obipascal/player"
 
 function VideoPlayer() {
 	return (
@@ -146,7 +146,7 @@ function VideoPlayer() {
 ### React Hook (Custom Controls)
 
 ```tsx
-import { useWontumPlayer } from "@wontum/player"
+import { useWontumPlayer } from "@obipascal/player"
 
 function CustomPlayer() {
 	const { containerRef, player, state } = useWontumPlayer({
@@ -182,7 +182,7 @@ function CustomPlayer() {
 ### React Context Provider
 
 ```tsx
-import { WontumPlayerProvider, useWontumPlayerContext } from "@wontum/player"
+import { WontumPlayerProvider, useWontumPlayerContext } from "@obipascal/player"
 
 function App() {
 	return (
@@ -218,7 +218,7 @@ function ControlPanel() {
 For secure video delivery, use CloudFront with signed cookies:
 
 ```typescript
-import { WontumPlayer } from "@wontum/player"
+import { WontumPlayer } from "@obipascal/player"
 
 // Your backend sets signed cookies for CloudFront
 // Cookie names: CloudFront-Policy, CloudFront-Signature, CloudFront-Key-Pair-Id
@@ -576,7 +576,7 @@ import {
 	cyberpunkTheme,
 	pastelTheme,
 	educationTheme,
-} from "@wontum/player"
+} from "@obipascal/player"
 
 const player = new WontumPlayer({
 	src: "https://media.example.com/video/playlist.m3u8",
@@ -620,7 +620,7 @@ const player = new WontumPlayer({
 Quick brand color presets:
 
 ```typescript
-import { BrandPresets } from "@wontum/player"
+import { BrandPresets } from "@obipascal/player"
 
 const player = new WontumPlayer({
 	src: "https://media.example.com/video/playlist.m3u8",

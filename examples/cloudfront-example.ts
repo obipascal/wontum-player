@@ -106,7 +106,7 @@ export function cloudFrontWithRetryExample() {
  */
 export const ReactCloudFrontPlayerExample = `
 import React from "react"
-import { WontumPlayerReact } from "@wontum/player"
+import { WontumPlayerReact } from "@obipascal/player"
 
 export function CloudFrontPlayer({ videoUrl, userId }: { videoUrl: string; userId: string }) {
 	// Sign URL function

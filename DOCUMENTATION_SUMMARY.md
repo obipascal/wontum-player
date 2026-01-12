@@ -158,7 +158,7 @@ Complete method reference with examples:
 
 ### Basic Usage (Vanilla JS)
 ```typescript
-import { WontumPlayer } from "@wontum/player"
+import { WontumPlayer } from "@obipascal/player"
 
 const player = new WontumPlayer({
   src: "https://media.example.com/video/playlist.m3u8",

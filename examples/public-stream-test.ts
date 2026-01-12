@@ -209,7 +209,7 @@ export const htmlExample = `
  */
 export const reactPublicStreamExample = `
 import React from 'react';
-import { WontumPlayerReact } from '@wontum/player';
+import { WontumPlayerReact } from '@obipascal/player';
 
 function App() {
   return (

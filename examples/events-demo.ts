@@ -212,7 +212,7 @@ export function minimalEventExample() {
  */
 export const ReactAllEventsExample = `
 import React from 'react';
-import { WontumPlayerReact } from '@wontum/player';
+import { WontumPlayerReact } from '@obipascal/player';
 
 function VideoPlayerWithEvents() {
   return (
