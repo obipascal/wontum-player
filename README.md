@@ -5,6 +5,7 @@ A modern, feature-rich HLS video player SDK for educational platforms with Cloud
 ## ✨ Features
 
 ### Core Playback
+
 - 🎬 **HLS Streaming**: Full HLS.js support with adaptive bitrate streaming
 - 🔒 **CloudFront Integration**: Native support for CloudFront signed cookies and S3-hosted videos
 - 🎯 **Skip Controls**: 10-second forward/backward skip with circular arrow buttons
@@ -13,11 +14,13 @@ A modern, feature-rich HLS video player SDK for educational platforms with Cloud
 - 🎛️ **Playback Rate**: Adjustable speed (0.5x - 2x)
 
 ### Subtitle & Accessibility
+
 - 📝 **Subtitle Support**: Full subtitle/caption support with programmatic API
 - 🌐 **Multi-language**: Support for multiple subtitle tracks with language selection
 - ♿ **Accessibility**: WCAG compliant with keyboard navigation
 
 ### UI & Controls
+
 - 🎨 **Modern UI Design**: Beautiful controls with blur effects, gradients, and smooth animations
 - 🖱️ **Smart Controls**: Auto-hide on inactivity, fade on hover
 - 📍 **Sticky Controls**: Optional persistent controls (toggle in settings)
@@ -27,6 +30,7 @@ A modern, feature-rich HLS video player SDK for educational platforms with Cloud
 - 🎨 **Custom Theming**: Full CSS variable theming with 8 customizable properties
 
 ### Developer Experience
+
 - ⚛️ **React Support**: Component, Hook, and Context Provider patterns
 - 🔧 **TypeScript**: Full TypeScript support with comprehensive type definitions
 - 📊 **Analytics & QoE**: Built-in analytics tracking and Quality of Experience metrics
@@ -98,7 +102,7 @@ yarn add @obipascal/player hls.js
 			player.on("timeupdate", (event) => {
 				console.log("Current time:", event.data.currentTime)
 			})
-			
+
 			// Programmatic subtitle control
 			player.enableSubtitles(0) // Enable first subtitle track
 			player.toggleSubtitles() // Toggle subtitles on/off
@@ -213,43 +217,165 @@ function ControlPanel() {
 
 ## 🔒 CloudFront & S3 Integration
 
-### CloudFront with Signed Cookies (Recommended)
+This player supports **three video hosting scenarios**. Choose the one that fits your needs:
 
-For secure video delivery, use CloudFront with signed cookies:
+### Scenario 1: Public Videos (Easiest - No Authentication Required)
+
+**When to use:** Your videos are publicly accessible and don't require user authentication.
+
+**Setup:** Just provide the video URL!
 
 ```typescript
 import { WontumPlayer } from "@obipascal/player"
 
-// Your backend sets signed cookies for CloudFront
-// Cookie names: CloudFront-Policy, CloudFront-Signature, CloudFront-Key-Pair-Id
-
 const player = new WontumPlayer({
-	src: "https://media.yourdomain.com/video/playlist.m3u8",
+	src: "https://d1234567890.cloudfront.net/video/playlist.m3u8",
 	container: "#player",
-	s3Config: {
-		cloudfront: {
-			domain: "media.yourdomain.com",
-			// Cookies are automatically sent by browser
-		},
-	},
 })
 ```
 
-### CloudFront Signed Cookie Setup (Backend)
+✅ **That's it!** No backend needed. Works for public S3 buckets or CloudFront distributions.
+
+---
+
+### Scenario 2: Private Videos with CloudFront Signed Cookies (Recommended)
+
+**When to use:** You want to restrict video access to authorized users (e.g., paid courses, premium content).
+
+**How it works:**
+
+1. User logs into your app
+2. Your backend verifies the user and sets CloudFront signed cookies
+3. Player automatically sends these cookies with every video request
+4. CloudFront checks the cookies and allows/denies access
+
+**Frontend Setup:**
 
 ```typescript
-// Node.js backend example
-import { CloudFrontClient } from "@aws-sdk/client-cloudfront"
-import { getSignedCookies } from "@aws-sdk/cloudfront-signer"
+import { WontumPlayer } from "@obipascal/player"
 
-app.get("/api/video-auth", async (req, res) => {
+// STEP 1: Call your backend to set signed cookies BEFORE creating the player
+async function initializePlayer() {
+	// This endpoint sets CloudFront cookies in the browser
+	await fetch("/api/auth/video-access", {
+		credentials: "include", // Important: include cookies
+	})
+
+	// STEP 2: Create player - it will automatically use the cookies
+	const player = new WontumPlayer({
+		src: "https://media.yourdomain.com/videos/lesson-1/playlist.m3u8",
+		container: "#player",
+		s3Config: {
+			cloudFrontDomains: ["media.yourdomain.com"], // Your CloudFront domain
+			signUrl: async (url) => {
+				// This function is called when player needs to access a video
+				// Call your backend to refresh/set cookies if needed
+				const response = await fetch("/api/auth/sign-url", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					credentials: "include",
+					body: JSON.stringify({ url }),
+				})
+
+				if (!response.ok) {
+					throw new Error("Failed to authenticate video access")
+				}
+
+				// Backend sets cookies, return the URL
+				return url
+			},
+		},
+	})
+}
+
+initializePlayer()
+```
+
+**Backend Setup (Node.js/Express):**
+
+```typescript
+import express from "express"
+import { getSignedCookies } from "@aws-sdk/cloudfront-signer"
+import fs from "fs"
+
+const app = express()
+
+// STEP 1: Create endpoint that sets CloudFront signed cookies
+app.get("/api/auth/video-access", (req, res) => {
+	// Check if user is logged in (your authentication logic)
+	if (!req.user) {
+		return res.status(401).json({ error: "Not authenticated" })
+	}
+
+	// Define what resources user can access
+	const policy = {
+		Statement: [
+			{
+				Resource: "https://media.yourdomain.com/*", // All videos on this domain
+				Condition: {
+					DateLessThan: {
+						"AWS:EpochTime": Math.floor(Date.now() / 1000) + 3600, // Expires in 1 hour
+					},
+				},
+			},
+		],
+	}
+
+	// Generate CloudFront signed cookies
+	const cookies = getSignedCookies({
+		keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!, // Your CloudFront key pair ID
+		privateKey: fs.readFileSync("./cloudfront-private-key.pem", "utf8"), // Your private key
+		policy: JSON.stringify(policy),
+	})
+
+	// Set the three required cookies
+	res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], {
+		domain: ".yourdomain.com", // Use your domain
+		path: "/",
+		secure: true, // HTTPS only
+		httpOnly: true, // Prevent JavaScript access
+		sameSite: "none",
+	})
+
+	res.cookie("CloudFront-Signature", cookies["CloudFront-Signature"], {
+		domain: ".yourdomain.com",
+		path: "/",
+		secure: true,
+		httpOnly: true,
+		sameSite: "none",
+	})
+
+	res.cookie("CloudFront-Key-Pair-Id", cookies["CloudFront-Key-Pair-Id"], {
+		domain: ".yourdomain.com",
+		path: "/",
+		secure: true,
+		httpOnly: true,
+		sameSite: "none",
+	})
+
+	res.json({ success: true })
+})
+
+// STEP 2: Optional endpoint for on-demand signing (called by signUrl function)
+app.post("/api/auth/sign-url", (req, res) => {
+	const { url } = req.body
+
+	// Verify user is authorized
+	if (!req.user) {
+		return res.status(401).json({ error: "Not authenticated" })
+	}
+
+	// You can add additional authorization logic here
+	// For example, check if user has access to this specific video
+
+	// Refresh cookies (same code as above)
 	const policy = {
 		Statement: [
 			{
 				Resource: "https://media.yourdomain.com/*",
 				Condition: {
 					DateLessThan: {
-						"AWS:EpochTime": Math.floor(Date.now() / 1000) + 3600, // 1 hour
+						"AWS:EpochTime": Math.floor(Date.now() / 1000) + 3600,
 					},
 				},
 			},
@@ -257,42 +383,141 @@ app.get("/api/video-auth", async (req, res) => {
 	}
 
 	const cookies = getSignedCookies({
-		keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID,
-		privateKey: process.env.CLOUDFRONT_PRIVATE_KEY,
+		keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
+		privateKey: fs.readFileSync("./cloudfront-private-key.pem", "utf8"),
 		policy: JSON.stringify(policy),
 	})
 
-	// Set cookies
 	res.cookie("CloudFront-Policy", cookies["CloudFront-Policy"], {
 		domain: ".yourdomain.com",
+		path: "/",
 		secure: true,
 		httpOnly: true,
+		sameSite: "none",
 	})
+
 	res.cookie("CloudFront-Signature", cookies["CloudFront-Signature"], {
 		domain: ".yourdomain.com",
+		path: "/",
 		secure: true,
 		httpOnly: true,
+		sameSite: "none",
 	})
+
 	res.cookie("CloudFront-Key-Pair-Id", cookies["CloudFront-Key-Pair-Id"], {
 		domain: ".yourdomain.com",
+		path: "/",
 		secure: true,
 		httpOnly: true,
+		sameSite: "none",
 	})
 
 	res.json({ success: true })
 })
 ```
 
-### Public S3/CloudFront (No Authentication)
+**AWS CloudFront Setup:**
 
-For public videos:
+1. Create a CloudFront key pair in AWS Console → CloudFront → Key pairs
+2. Download the private key file
+3. Set up environment variables:
+   ```bash
+   CLOUDFRONT_KEY_PAIR_ID=APKA...
+   ```
+4. Configure your CloudFront distribution to require signed cookies
+
+---
+
+### Scenario 3: Private S3 Videos with Presigned URLs
+
+**When to use:** Videos are in private S3 buckets without CloudFront.
+
+**How it works:**
+
+1. Your backend generates temporary presigned URLs for S3 objects
+2. Player uses these URLs to access videos
+3. URLs expire after a set time (e.g., 1 hour)
+
+**Frontend Setup:**
 
 ```typescript
+import { WontumPlayer } from "@obipascal/player"
+
 const player = new WontumPlayer({
-	src: "https://d1234567890.cloudfront.net/video/playlist.m3u8",
+	src: "s3://my-bucket/videos/lesson-1/playlist.m3u8", // S3 URI
 	container: "#player",
+	s3Config: {
+		getPresignedUrl: async (s3Key) => {
+			// Call your backend to generate presigned URL
+			const response = await fetch("/api/s3/presigned-url", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ key: s3Key }),
+			})
+
+			if (!response.ok) {
+				throw new Error("Failed to get presigned URL")
+			}
+
+			const data = await response.json()
+			return data.url // Return the presigned URL
+		},
+	},
 })
 ```
+
+**Backend Setup (Node.js):**
+
+```typescript
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
+
+const s3Client = new S3Client({
+	region: "us-east-1",
+	credentials: {
+		accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+		secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+	},
+})
+
+app.post("/api/s3/presigned-url", async (req, res) => {
+	const { key } = req.body
+
+	// Verify user is authorized to access this video
+	if (!req.user) {
+		return res.status(401).json({ error: "Not authenticated" })
+	}
+
+	try {
+		// Generate presigned URL
+		const command = new GetObjectCommand({
+			Bucket: "my-bucket",
+			Key: key, // e.g., "videos/lesson-1/playlist.m3u8"
+		})
+
+		const url = await getSignedUrl(s3Client, command, {
+			expiresIn: 3600, // URL valid for 1 hour
+		})
+
+		res.json({ url })
+	} catch (error) {
+		console.error("Error generating presigned URL:", error)
+		res.status(500).json({ error: "Failed to generate presigned URL" })
+	}
+})
+```
+
+---
+
+### Which Method Should I Use?
+
+| Method                 | Best For                                       | Complexity  | Performance  |
+| ---------------------- | ---------------------------------------------- | ----------- | ------------ |
+| **Public Videos**      | Free content, marketing videos                 | ⭐ Easy     | ⚡ Fast      |
+| **CloudFront Cookies** | ⭐ **Recommended** for paid courses, premium   | ⭐⭐ Medium | ⚡⚡ Fastest |
+| **S3 Presigned URLs**  | Direct S3 access, simple private video hosting | ⭐⭐ Medium | ⚡ Good      |
+
+💡 **Tip:** Use CloudFront with signed cookies for production. It's more secure and performant for HLS videos (which have many file segments).
 
 ## 📝 Subtitle Support
 
@@ -568,15 +793,7 @@ function CustomPlayer() {
 Wontum Player comes with 7 beautiful pre-made themes:
 
 ```typescript
-import {
-	netflixTheme,
-	youtubeTheme,
-	modernTheme,
-	greenTheme,
-	cyberpunkTheme,
-	pastelTheme,
-	educationTheme,
-} from "@obipascal/player"
+import { netflixTheme, youtubeTheme, modernTheme, greenTheme, cyberpunkTheme, pastelTheme, educationTheme } from "@obipascal/player"
 
 const player = new WontumPlayer({
 	src: "https://media.example.com/video/playlist.m3u8",
@@ -586,6 +803,7 @@ const player = new WontumPlayer({
 ```
 
 **Available Themes:**
+
 - `netflixTheme()` - Netflix-inspired red and black
 - `youtubeTheme()` - YouTube-inspired red and white
 - `modernTheme()` - Modern blue gradient
@@ -634,6 +852,7 @@ const player = new WontumPlayer({
 ```
 
 **Available Brand Colors:**
+
 - `blue`, `lightBlue`, `darkBlue`
 - `red`, `lightRed`, `darkRed`
 - `green`, `lightGreen`, `darkGreen`
@@ -788,6 +1007,7 @@ For detailed API documentation including all methods, events, types, and configu
 ### Quick Reference
 
 **Player Methods:**
+
 - **Playback:** `play()`, `pause()`, `seek(time)`, `skipForward(seconds)`, `skipBackward(seconds)`
 - **Volume:** `setVolume(level)`, `mute()`, `unmute()`
 - **Subtitles:** `enableSubtitles(index)`, `disableSubtitles()`, `toggleSubtitles()`, `getSubtitleTracks()`, `areSubtitlesEnabled()`
@@ -798,6 +1018,7 @@ For detailed API documentation including all methods, events, types, and configu
 - **Lifecycle:** `destroy()`
 
 **Events (25 total):**
+
 - **Playback:** `play`, `pause`, `ended`, `timeupdate`, `durationchange`
 - **Loading:** `loadstart`, `loadedmetadata`, `loadeddata`, `canplay`, `canplaythrough`
 - **Buffering:** `waiting`, `playing`, `stalled`, `suspend`, `abort`
@@ -812,13 +1033,13 @@ For detailed API documentation including all methods, events, types, and configu
 
 ## 🌐 Browser Support
 
-| Browser | Minimum Version |
-|---------|----------------|
-| Chrome | Latest 2 versions |
-| Edge | Latest 2 versions |
-| Firefox | Latest 2 versions |
-| Safari | Latest 2 versions |
-| iOS Safari | iOS 12+ |
+| Browser        | Minimum Version   |
+| -------------- | ----------------- |
+| Chrome         | Latest 2 versions |
+| Edge           | Latest 2 versions |
+| Firefox        | Latest 2 versions |
+| Safari         | Latest 2 versions |
+| iOS Safari     | iOS 12+           |
 | Android Chrome | Latest 2 versions |
 
 **Note:** HLS playback requires HLS.js support. Native HLS playback is supported on Safari.
