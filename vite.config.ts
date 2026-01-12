@@ -11,7 +11,7 @@ export default defineConfig({
 			fileName: (format) => `wontum-player.${format === "es" ? "esm" : "cjs"}.js`,
 		},
 		rollupOptions: {
-			external: ["react", "react-dom", "hls.js"],
+			external: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "hls.js"],
 			output: {
 				globals: {
 					react: "React",

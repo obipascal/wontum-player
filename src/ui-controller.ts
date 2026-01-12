@@ -14,9 +14,6 @@ export class UIController {
 	private skipForwardButton: HTMLElement
 	private volumeButton: HTMLElement
 	private fullscreenButton: HTMLElement
-	private qualityButton: HTMLElement
-	private subtitleButton: HTMLElement
-	private speedButton: HTMLElement
 	private settingsButton: HTMLElement
 	// private timeDisplay: HTMLElement
 	private volumeSlider: HTMLInputElement
@@ -42,9 +39,6 @@ export class UIController {
 		this.skipForwardButton = this.controlsContainer.querySelector(".wontum-skip-forward-btn")!
 		this.volumeButton = this.controlsContainer.querySelector(".wontum-volume-btn")!
 		this.fullscreenButton = this.controlsContainer.querySelector(".wontum-fullscreen-btn")!
-		this.qualityButton = this.controlsContainer.querySelector(".wontum-quality-btn")!
-		this.subtitleButton = this.controlsContainer.querySelector(".wontum-subtitle-btn")!
-		this.speedButton = this.controlsContainer.querySelector(".wontum-speed-btn")!
 		this.settingsButton = this.controlsContainer.querySelector(".wontum-settings-btn")!
 		// this.timeDisplay = this.controlsContainer.querySelector(".wontum-time-display")!
 		this.volumeSlider = this.controlsContainer.querySelector(".wontum-volume-slider")! as HTMLInputElement
@@ -356,21 +350,7 @@ export class UIController {
       }
       
       .wontum-quality-menu {
-        position: absolute;
-        bottom: 100%;
-        right: 0;
-        background: rgba(20, 20, 20, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 6px;
         padding: 6px 0;
-        margin-bottom: 8px;
-        display: none;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        min-width: 120px;
-      }
-      
-      .wontum-quality-menu.active {
-        display: block;
       }
       
       .wontum-quality-option {
@@ -393,21 +373,7 @@ export class UIController {
       }
       
       .wontum-speed-menu {
-        position: absolute;
-        bottom: 100%;
-        right: 0;
-        background: rgba(20, 20, 20, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 6px;
         padding: 6px 0;
-        margin-bottom: 8px;
-        display: none;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        min-width: 120px;
-      }
-      
-      .wontum-speed-menu.active {
-        display: block;
       }
       
       .wontum-speed-option {
@@ -429,22 +395,71 @@ export class UIController {
         background: rgba(255, 255, 255, 0.05);
       }
       
-      .wontum-settings-menu {
+      .wontum-settings-panel {
         position: absolute;
         bottom: 100%;
         right: 0;
         background: rgba(20, 20, 20, 0.95);
         backdrop-filter: blur(10px);
-        border-radius: 6px;
-        padding: 6px 0;
+        border-radius: 8px;
         margin-bottom: 8px;
-        min-width: 200px;
+        min-width: 320px;
         display: none;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        overflow: hidden;
       }
       
-      .wontum-settings-menu.active {
+      .wontum-settings-panel.active {
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .wontum-settings-tabs {
+        display: flex;
+        background: rgba(0, 0, 0, 0.3);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .wontum-tab {
+        flex: 1;
+        padding: 10px 12px;
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-bottom: 2px solid transparent;
+        font-family: inherit;
+      }
+      
+      .wontum-tab:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.9);
+      }
+      
+      .wontum-tab.active {
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
+        background: rgba(59, 130, 246, 0.1);
+      }
+      
+      .wontum-settings-content {
+        min-height: 120px;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      
+      .wontum-tab-panel {
+        display: none;
+      }
+      
+      .wontum-tab-panel.active {
         display: block;
+      }
+      
+      .wontum-settings-menu {
+        padding: 6px 0;
       }
       
       .wontum-settings-option {
@@ -494,21 +509,7 @@ export class UIController {
       }
       
       .wontum-subtitle-menu {
-        position: absolute;
-        bottom: 100%;
-        right: 0;
-        background: rgba(20, 20, 20, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 6px;
         padding: 6px 0;
-        margin-bottom: 8px;
-        display: none;
-        min-width: 150px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      }
-      
-      .wontum-subtitle-menu.active {
-        display: block;
       }
       
       .wontum-subtitle-option {
@@ -594,32 +595,32 @@ export class UIController {
         
         <div class="wontum-spacer"></div>
         
-        <div class="wontum-subtitle-container" style="position: relative;">
-          <button class="wontum-btn wontum-subtitle-btn" aria-label="Subtitles">
-            ${this.getSubtitleIcon()}
-          </button>
-          <div class="wontum-subtitle-menu"></div>
-        </div>
-        
-        <div class="wontum-speed-container" style="position: relative;">
-          <button class="wontum-btn wontum-speed-btn" aria-label="Playback Speed">
-            ${this.getSpeedIcon()}
-          </button>
-          <div class="wontum-speed-menu"></div>
-        </div>
-        
-        <div class="wontum-quality-container" style="position: relative;">
-          <button class="wontum-btn wontum-quality-btn" aria-label="Quality">
-            ${this.getQualityIcon()}
-          </button>
-          <div class="wontum-quality-menu"></div>
-        </div>
-        
         <div class="wontum-settings-container" style="position: relative;">
           <button class="wontum-btn wontum-settings-btn" aria-label="Settings">
             ${this.getSettingsIcon()}
           </button>
-          <div class="wontum-settings-menu"></div>
+          <div class="wontum-settings-panel">
+            <div class="wontum-settings-tabs">
+              <button class="wontum-tab active" data-tab="general">General</button>
+              <button class="wontum-tab" data-tab="quality">Quality</button>
+              <button class="wontum-tab" data-tab="speed">Speed</button>
+              <button class="wontum-tab" data-tab="subtitles">Subtitles</button>
+            </div>
+            <div class="wontum-settings-content">
+              <div class="wontum-tab-panel active" data-panel="general">
+                <div class="wontum-settings-menu"></div>
+              </div>
+              <div class="wontum-tab-panel" data-panel="quality">
+                <div class="wontum-quality-menu"></div>
+              </div>
+              <div class="wontum-tab-panel" data-panel="speed">
+                <div class="wontum-speed-menu"></div>
+              </div>
+              <div class="wontum-tab-panel" data-panel="subtitles">
+                <div class="wontum-subtitle-menu"></div>
+              </div>
+            </div>
+          </div>
         </div>
         
         <button class="wontum-btn wontum-fullscreen-btn" aria-label="Fullscreen">
@@ -691,50 +692,36 @@ export class UIController {
 			}
 		})
 
-		// Quality selector
-		this.qualityButton.addEventListener("click", () => {
-			const menu = this.controlsContainer.querySelector(".wontum-quality-menu")!
-			menu.classList.toggle("active")
-			// Close other menus
-			this.controlsContainer.querySelector(".wontum-settings-menu")?.classList.remove("active")
-			this.controlsContainer.querySelector(".wontum-subtitle-menu")?.classList.remove("active")
-			this.controlsContainer.querySelector(".wontum-speed-menu")?.classList.remove("active")
-		})
-
-		// Subtitle selector
-		this.subtitleButton.addEventListener("click", () => {
-			const menu = this.controlsContainer.querySelector(".wontum-subtitle-menu")!
-			menu.classList.toggle("active")
-			// Close other menus
-			this.controlsContainer.querySelector(".wontum-settings-menu")?.classList.remove("active")
-			this.controlsContainer.querySelector(".wontum-quality-menu")?.classList.remove("active")
-			this.controlsContainer.querySelector(".wontum-speed-menu")?.classList.remove("active")
-			// Update subtitle menu
-			this.updateSubtitleMenu()
-		})
-
-		// Speed selector
-		this.speedButton.addEventListener("click", () => {
-			const menu = this.controlsContainer.querySelector(".wontum-speed-menu")!
-			menu.classList.toggle("active")
-			// Close other menus
-			this.controlsContainer.querySelector(".wontum-settings-menu")?.classList.remove("active")
-			this.controlsContainer.querySelector(".wontum-quality-menu")?.classList.remove("active")
-			this.controlsContainer.querySelector(".wontum-subtitle-menu")?.classList.remove("active")
-			// Update speed menu
-			this.updateSpeedMenu()
-		})
-
-		// Settings menu
+		// Settings panel with tabs
 		this.settingsButton.addEventListener("click", () => {
-			const menu = this.controlsContainer.querySelector(".wontum-settings-menu")!
-			menu.classList.toggle("active")
-			// Close other menus
-			this.controlsContainer.querySelector(".wontum-quality-menu")?.classList.remove("active")
-			this.controlsContainer.querySelector(".wontum-subtitle-menu")?.classList.remove("active")
-			this.controlsContainer.querySelector(".wontum-speed-menu")?.classList.remove("active")
-			// Update settings menu
-			this.updateSettingsMenu()
+			const panel = this.controlsContainer.querySelector(".wontum-settings-panel")!
+			panel.classList.toggle("active")
+			// Update all menus when opening
+			if (panel.classList.contains("active")) {
+				this.updateSettingsMenu()
+				this.updateQualityMenu()
+				this.updateSpeedMenu()
+				this.updateSubtitleMenu()
+			}
+		})
+
+		// Tab switching
+		const tabs = this.controlsContainer.querySelectorAll(".wontum-tab")
+		tabs.forEach((tab) => {
+			tab.addEventListener("click", (e) => {
+				const target = e.currentTarget as HTMLElement
+				const tabName = target.getAttribute("data-tab")!
+
+				// Update active tab
+				tabs.forEach((t) => t.classList.remove("active"))
+				target.classList.add("active")
+
+				// Update active panel
+				const panels = this.controlsContainer.querySelectorAll(".wontum-tab-panel")
+				panels.forEach((p) => p.classList.remove("active"))
+				const activePanel = this.controlsContainer.querySelector(`[data-panel="${tabName}"]`)
+				activePanel?.classList.add("active")
+			})
 		})
 
 		// Click on video to play/pause
@@ -847,7 +834,6 @@ export class UIController {
 
 				menu.querySelectorAll(".wontum-subtitle-option").forEach((opt) => opt.classList.remove("active"))
 				target.classList.add("active")
-				menu.classList.remove("active")
 			})
 		})
 	}
@@ -878,7 +864,6 @@ export class UIController {
 
 				menu.querySelectorAll(".wontum-speed-option").forEach((opt) => opt.classList.remove("active"))
 				target.classList.add("active")
-				menu.classList.remove("active")
 			})
 		})
 	}
@@ -909,11 +894,21 @@ export class UIController {
 		})
 	}
 
-	private updateQualityMenu(qualities: any[]): void {
+	private updateQualityMenu(qualities?: any[]): void {
 		const menu = this.controlsContainer.querySelector(".wontum-quality-menu")!
+
+		// If no qualities provided, get from player
+		const qualityList = qualities || this.player.getQualities()
+
+		// If still no qualities available, show message
+		if (!qualityList || qualityList.length === 0) {
+			menu.innerHTML = '<div class="wontum-quality-option">No qualities available</div>'
+			return
+		}
+
 		menu.innerHTML = `
       <div class="wontum-quality-option active" data-quality="-1">Auto</div>
-      ${qualities
+      ${qualityList
 				.map(
 					(q, i) => `
         <div class="wontum-quality-option" data-quality="${i}">${q.name}</div>
@@ -930,7 +925,6 @@ export class UIController {
 
 				menu.querySelectorAll(".wontum-quality-option").forEach((opt) => opt.classList.remove("active"))
 				target.classList.add("active")
-				menu.classList.remove("active")
 			})
 		})
 	}
@@ -994,10 +988,6 @@ export class UIController {
 		return `<svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`
 	}
 
-	private getQualityIcon(): string {
-		return `<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-8 12H9.5v-2h-2v2H6V9h1.5v2.5h2V9H11v6zm7-1c0 .55-.45 1-1 1h-.75v1.5h-1.5V15H14c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v4zm-3.5-.5h2v-3h-2v3z"/></svg>`
-	}
-
 	private getSkipBackwardIcon(): string {
 		return `<svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
 			<circle cx="30" cy="30" r="28" stroke="white" stroke-width="2"/>
@@ -1016,14 +1006,6 @@ export class UIController {
 			<path d="M35 12 L30 12 L30 17" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 			<text x="30" y="35" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">10</text>
 		</svg>`
-	}
-
-	private getSubtitleIcon(): string {
-		return `<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 6H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z"/></svg>`
-	}
-
-	private getSpeedIcon(): string {
-		return `<svg viewBox="0 0 24 24"><path d="M20.38 8.57l-1.23 1.85a8 8 0 0 1-.22 7.58H5.07A8 8 0 0 1 15.58 6.85l1.85-1.23A10 10 0 0 0 3.35 19a2 2 0 0 0 1.72 1h13.85a2 2 0 0 0 1.74-1 10 10 0 0 0-.27-10.44zm-9.79 6.84a2 2 0 0 0 2.83 0l5.66-8.49-8.49 5.66a2 2 0 0 0 0 2.83z"/></svg>`
 	}
 
 	private getSettingsIcon(): string {

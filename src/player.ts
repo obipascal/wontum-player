@@ -16,6 +16,7 @@ export class WontumPlayer {
 	public analytics: Analytics
 	private s3Handler: S3Handler
 	private uiController: UIController
+	private qualities: QualityLevel[] = []
 
 	private state: PlayerState = {
 		playing: false,
@@ -230,8 +231,7 @@ export class WontumPlayer {
 
 				this.hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
 					const qualities = this.extractQualities(data.levels)
-					this.state.availableQualities = qualities.map((q) => q.name)
-					this.emit("loadedmetadata", { qualities })
+					this.qualities = qualities
 				})
 
 				this.hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
@@ -339,6 +339,10 @@ export class WontumPlayer {
 		if (this.hls) {
 			this.hls.currentLevel = qualityIndex
 		}
+	}
+
+	public getQualities(): QualityLevel[] {
+		return this.qualities
 	}
 
 	public enterFullscreen(): void {
