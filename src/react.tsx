@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react"
+import * as React from "react"
+import { useEffect, useRef, useState } from "react"
 import { WontumPlayer } from "./player"
 import { WontumPlayerConfig, PlayerState } from "./types"
 
@@ -13,6 +14,8 @@ export interface WontumPlayerReactProps extends Omit<WontumPlayerConfig, "contai
 	onTimeUpdate?: (currentTime: number) => void
 	onVolumeChange?: (volume: number, muted: boolean) => void
 	onError?: (error: any) => void
+	onLoadedMetadata?: () => void
+	onQualityChange?: (level: number) => void
 
 	/** Container style */
 	style?: React.CSSProperties
@@ -42,6 +45,8 @@ export const WontumPlayerReact: React.FC<WontumPlayerReactProps> = (props) => {
 		s3Config,
 		analytics,
 		hlsConfig,
+		subtitles,
+		stickyControls,
 		onReady,
 		onPlay,
 		onPause,
@@ -49,6 +54,8 @@ export const WontumPlayerReact: React.FC<WontumPlayerReactProps> = (props) => {
 		onTimeUpdate,
 		onVolumeChange,
 		onError,
+		onLoadedMetadata,
+		onQualityChange,
 		style,
 		className,
 		width = "100%",
@@ -73,6 +80,8 @@ export const WontumPlayerReact: React.FC<WontumPlayerReactProps> = (props) => {
 			s3Config,
 			analytics,
 			hlsConfig,
+			subtitles,
+			stickyControls,
 		}
 
 		const player = new WontumPlayer(config)
@@ -83,6 +92,8 @@ export const WontumPlayerReact: React.FC<WontumPlayerReactProps> = (props) => {
 		if (onPause) player.on("pause", onPause)
 		if (onEnded) player.on("ended", onEnded)
 		if (onError) player.on("error", (e) => onError(e.data?.error))
+		if (onLoadedMetadata) player.on("loadedmetadata", onLoadedMetadata)
+		if (onQualityChange) player.on("qualitychange", (e) => onQualityChange(e.data.level))
 
 		if (onTimeUpdate) {
 			player.on("timeupdate", (e) => onTimeUpdate(e.data.currentTime))
@@ -102,15 +113,6 @@ export const WontumPlayerReact: React.FC<WontumPlayerReactProps> = (props) => {
 			playerRef.current = null
 		}
 	}, [src]) // Re-initialize only when src changes
-
-	// Update config when props change
-	useEffect(() => {
-		if (!playerRef.current) return
-
-		if (autoplay !== undefined) {
-			// Handle autoplay changes if needed
-		}
-	}, [autoplay, muted, controls])
 
 	return (
 		<div
