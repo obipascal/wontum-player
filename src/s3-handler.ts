@@ -56,7 +56,10 @@ export class S3Handler {
 	 * Sign CloudFront URL by calling the signing endpoint
 	 * The endpoint should set signed cookies and return the URL
 	 */
-	private async signCloudFrontUrl(url: string): Promise<string> {
+	private async signCloudFrontUrl(url: string, retryCount = 0): Promise<string> {
+		const MAX_RETRIES = 2
+		const RETRY_DELAY = 300 // ms
+
 		// Check if already signed in this session
 		if (this.signedUrls.has(url)) {
 			return url
@@ -69,9 +72,27 @@ export class S3Handler {
 				// Mark as signed to avoid re-signing
 				this.signedUrls.add(url)
 				return signedUrl
-			} catch (error) {
+			} catch (error: any) {
+				// Check if error is an AbortError
+				const isAbortError = error?.name === "AbortError" || error?.message?.includes("aborted")
+
+				// Retry on AbortError (often caused by Apollo/React component lifecycle)
+				if (isAbortError && retryCount < MAX_RETRIES) {
+					console.warn(`Sign URL aborted, retrying (${retryCount + 1}/${MAX_RETRIES})...`)
+					// Wait before retrying
+					await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY))
+					return this.signCloudFrontUrl(url, retryCount + 1)
+				}
+
 				console.error("Failed to sign CloudFront URL:", error)
-				throw new Error("Failed to sign CloudFront URL")
+				// For AbortError that exceeds retries, provide helpful message
+				if (isAbortError) {
+					throw new Error(
+						"Failed to sign CloudFront URL: Request was aborted. " +
+							"If using Apollo Client or other GraphQL clients, consider moving the query outside component lifecycle or using useQuery with skip option.",
+					)
+				}
+				throw new Error(`Failed to sign CloudFront URL: ${error?.message || "Unknown error"}`)
 			}
 		}
 

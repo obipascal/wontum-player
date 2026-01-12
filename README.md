@@ -215,6 +215,75 @@ function ControlPanel() {
 }
 ```
 
+### Using with Apollo Client / GraphQL
+
+If you're using Apollo Client or other GraphQL clients for URL signing, use `useQuery` instead of `useLazyQuery` to avoid abort errors:
+
+```tsx
+import React from "react"
+import { S3Config, WontumPlayerReact } from "@obipascal/player"
+import { useQuery } from "@apollo/client"
+import { GET_MEDIA_SIGNED_URL } from "@/graphql/queries/media.queries"
+
+interface VideoPlayerProps {
+	videoUrl: string
+}
+
+function VideoPlayer({ videoUrl }: VideoPlayerProps) {
+	// ✅ Use useQuery with skip option instead of useLazyQuery
+	const { refetch } = useQuery(GET_MEDIA_SIGNED_URL, {
+		skip: true, // Don't run on mount
+		fetchPolicy: "no-cache", // Always fetch fresh signed URLs
+	})
+
+	const url = new URL(videoUrl)
+
+	const s3config: S3Config = {
+		cloudFrontDomains: [url.hostname],
+		signUrl: async (resourceUrl: string) => {
+			try {
+				const { data } = await refetch({
+					signingMediaInput: {
+						resourceUrl,
+						isPublic: false,
+						type: "COOKIES",
+					},
+				})
+
+				console.log("Signed URL result:", data)
+				// For cookie-based signing, return the original URL
+				// The server sets cookies in the response
+				return resourceUrl
+			} catch (error) {
+				console.error("Failed to sign URL:", error)
+				throw error
+			}
+		},
+	}
+
+	return (
+		<WontumPlayerReact
+			src={videoUrl}
+			width="100%"
+			height="500px"
+			autoplay={false}
+			controls
+			s3Config={s3config}
+			theme={{
+				primaryColor: "#3b82f6",
+				accentColor: "#60a5fa",
+			}}
+		/>
+	)
+}
+```
+
+**Why `useQuery` with `skip` instead of `useLazyQuery`?**
+
+- `useLazyQuery` creates a new AbortController on each call, which can be aborted during React lifecycle
+- `useQuery` with `skip: true` and `refetch` persists across renders, avoiding abort issues
+- The SDK includes retry logic for AbortErrors, but using `useQuery` prevents them entirely
+
 ## 🔒 CloudFront & S3 Integration
 
 This player supports **three video hosting scenarios**. Choose the one that fits your needs:
