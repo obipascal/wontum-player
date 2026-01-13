@@ -90,6 +90,8 @@ export class WontumPlayer {
 		video.style.width = "100%"
 		video.style.height = "100%"
 		video.playsInline = true
+		// Enable credentials for CloudFront signed cookies and CORS
+		video.crossOrigin = "use-credentials"
 		return video
 	}
 
@@ -224,7 +226,21 @@ export class WontumPlayer {
 
 			// Check if HLS is supported
 			if (Hls.isSupported()) {
-				this.hls = new Hls(this.config.hlsConfig)
+				// Merge user's HLS config with required settings for CloudFront signed cookies
+				const hlsConfig = {
+					...this.config.hlsConfig,
+					xhrSetup: (xhr: XMLHttpRequest, url: string) => {
+						// Enable credentials to send cookies with all requests
+						xhr.withCredentials = true
+
+						// Call user's xhrSetup if provided
+						if (this.config.hlsConfig?.xhrSetup) {
+							this.config.hlsConfig.xhrSetup(xhr, url)
+						}
+					},
+				}
+
+				this.hls = new Hls(hlsConfig)
 
 				this.hls.loadSource(videoUrl)
 				this.hls.attachMedia(this.videoElement)
