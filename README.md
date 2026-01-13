@@ -34,6 +34,7 @@ A modern, feature-rich HLS video player SDK for educational platforms with Cloud
 - ⚛️ **React Support**: Component, Hook, and Context Provider patterns
 - 🔧 **TypeScript**: Full TypeScript support with comprehensive type definitions
 - 📊 **Analytics & QoE**: Built-in analytics tracking and Quality of Experience metrics
+- 🔌 **Real-time Analytics**: Native WebSocket and Socket.IO support for live analytics streaming
 - 🎯 **25 Events**: Complete event system compatible with Mux Player
 - 📱 **Responsive**: Mobile-friendly with touch support
 - 🎬 **Quality Selector**: Automatic quality switching with manual override
@@ -48,6 +49,12 @@ Or with yarn:
 
 ```bash
 yarn add @obipascal/player hls.js
+```
+
+**Optional:** For Socket.IO real-time analytics support:
+
+```bash
+npm install socket.io-client
 ```
 
 ## 🚀 Quick Start
@@ -691,7 +698,19 @@ Modern vertical volume slider with popup interface - hover over volume button to
 
 ## 📊 Analytics
 
-Track video engagement and quality metrics:
+Track video engagement and quality metrics with HTTP endpoints or real-time WebSocket/Socket.IO streaming:
+
+**Features:**
+
+- ✅ HTTP endpoint support for traditional analytics
+- ✅ Native WebSocket support for real-time streaming
+- ✅ Socket.IO support with full TypeScript types
+- ✅ Dual streaming (HTTP + Socket simultaneously)
+- ✅ Event transformation and filtering
+- ✅ Auto-reconnection with configurable delays
+- ✅ Quality of Experience (QoE) metrics included in every event
+
+### HTTP Analytics
 
 ```typescript
 const player = new WontumPlayer({
@@ -719,6 +738,206 @@ console.log(metrics)
 //   eventCount: 42
 // }
 ```
+
+### WebSocket Real-Time Analytics
+
+Stream analytics events in real-time using native WebSocket for live dashboards and monitoring:
+
+```typescript
+const player = new WontumPlayer({
+	src: "https://example.com/video.m3u8",
+	container: "#player",
+	analytics: {
+		enabled: true,
+		userId: "user_456",
+		videoId: "video_789",
+		// Native WebSocket configuration
+		webSocket: {
+			type: "websocket", // Specify native WebSocket
+			connection: "wss://analytics.example.com/stream",
+			// Optional: Transform events before sending
+			transform: (event) => ({
+				type: event.eventType,
+				video_id: event.videoId,
+				user_id: event.userId,
+				timestamp: event.timestamp,
+				metrics: event.data,
+			}),
+			// Optional: Handle errors
+			onError: (error) => {
+				console.error("Analytics WebSocket error:", error)
+			},
+			// Optional: Connection opened
+			onOpen: (event) => {
+				console.log("Analytics WebSocket connected")
+			},
+			// Optional: Connection closed
+			onClose: (event) => {
+				console.log("Analytics WebSocket disconnected")
+			},
+			// Auto-reconnect on disconnect (default: true)
+			autoReconnect: true,
+			// Reconnect delay in milliseconds (default: 3000)
+			reconnectDelay: 3000,
+		},
+	},
+})
+```
+
+### Socket.IO Real-Time Analytics
+
+For Socket.IO-based real-time analytics (requires `socket.io-client` to be loaded):
+
+```typescript
+// Option 1: Let the SDK create the Socket.IO connection
+const player = new WontumPlayer({
+	src: "https://example.com/video.m3u8",
+	container: "#player",
+	analytics: {
+		enabled: true,
+		userId: "user_456",
+		videoId: "video_789",
+		webSocket: {
+			type: "socket.io",
+			connection: "https://analytics.example.com", // Socket.IO server URL
+			options: {
+				path: "/socket.io/",
+				transports: ["websocket", "polling"],
+				auth: {
+					token: "your-auth-token",
+				},
+				reconnection: true,
+				reconnectionDelay: 1000,
+			},
+			eventName: "video_analytics", // Event name to emit (default: "analytics")
+			transform: (event) => ({
+				event: event.eventType,
+				video: event.videoId,
+				user: event.userId,
+				data: event.data,
+			}),
+			onConnect: () => {
+				console.log("Socket.IO connected")
+			},
+			onDisconnect: (reason) => {
+				console.log("Socket.IO disconnected:", reason)
+			},
+			onError: (error) => {
+				console.error("Socket.IO error:", error)
+			},
+		},
+	},
+})
+```
+
+```typescript
+// Option 2: Use existing Socket.IO connection
+import { io } from "socket.io-client"
+
+const socket = io("https://analytics.example.com", {
+	auth: {
+		token: "your-auth-token",
+	},
+})
+
+const player = new WontumPlayer({
+	src: "https://example.com/video.m3u8",
+	container: "#player",
+	analytics: {
+		enabled: true,
+		userId: "user_456",
+		videoId: "video_789",
+		webSocket: {
+			type: "socket.io",
+			connection: socket, // Use existing Socket.IO instance
+			eventName: "analytics",
+		},
+	},
+})
+```
+
+### Using Existing WebSocket Connection
+
+```typescript
+// Create your own WebSocket connection
+const ws = new WebSocket("wss://analytics.example.com/stream")
+
+// Configure authentication or custom headers before connecting
+ws.addEventListener("open", () => {
+	// Send authentication message
+	ws.send(
+		JSON.stringify({
+			type: "auth",
+			token: "your-auth-token",
+		}),
+	)
+})
+
+const player = new WontumPlayer({
+	src: "https://example.com/video.m3u8",
+	container: "#player",
+	analytics: {
+		enabled: true,
+		userId: "user_456",
+		videoId: "video_789",
+		webSocket: {
+			type: "websocket",
+			connection: ws, // Use existing connection
+			transform: (event) => ({
+				// Custom format for your backend
+				action: "video_event",
+				payload: {
+					event: event.eventType,
+					data: event.data,
+				},
+			}),
+		},
+	},
+})
+```
+
+### Dual Analytics (HTTP + WebSocket/Socket.IO)
+
+Send analytics to both HTTP endpoint and real-time socket simultaneously:
+
+```typescript
+const player = new WontumPlayer({
+	src: "https://example.com/video.m3u8",
+	container: "#player",
+	analytics: {
+		enabled: true,
+		endpoint: "https://api.example.com/analytics", // HTTP fallback/storage
+		webSocket: {
+			type: "socket.io",
+			connection: "https://realtime.example.com", // Real-time monitoring
+			eventName: "video_analytics",
+		},
+		userId: "user_456",
+		videoId: "video_789",
+	},
+})
+```
+
+### Analytics Events Tracked
+
+The SDK automatically tracks these events:
+
+- **Session**: `session_start`, `session_end`
+- **Playback**: `play`, `pause`, `ended`, `playing`
+- **Buffering**: `buffering_start`, `buffering_end`, `waiting`, `stalled`
+- **Seeking**: `seeking`, `seeked`
+- **Quality**: `qualitychange`, `renditionchange`
+- **Errors**: `error`
+- **User Actions**: Volume changes, fullscreen, playback rate changes
+
+Each event includes Quality of Experience (QoE) metrics:
+
+- `sessionDuration` - Total session time
+- `totalPlayTime` - Actual video play time
+- `totalBufferTime` - Time spent buffering
+- `bufferingRatio` - Buffer time / play time ratio
+- `rebufferCount` - Number of rebuffer events
+- `seekCount` - Number of seek operations
 
 ## API Reference
 
@@ -749,6 +968,39 @@ interface S3Config {
 	withCredentials?: boolean // Enable cookies for HLS requests (default: false, required for CloudFront signed cookies)
 	region?: string // S3 region
 	endpoint?: string // Custom S3 endpoint
+}
+
+interface AnalyticsConfig {
+	enabled?: boolean // Enable analytics tracking
+	endpoint?: string // HTTP endpoint for analytics events
+	webSocket?: WebSocketAnalyticsHandler | SocketIOAnalyticsHandler // Real-time streaming
+	sessionId?: string // Session identifier
+	userId?: string // User identifier
+	videoId?: string // Video identifier
+}
+
+// Native WebSocket Configuration
+interface WebSocketAnalyticsHandler {
+	type: "websocket"
+	connection: WebSocket | string // WebSocket instance or URL
+	transform?: (event: AnalyticsEvent) => any // Transform before sending
+	onError?: (error: Event) => void
+	onOpen?: (event: Event) => void
+	onClose?: (event: CloseEvent) => void
+	autoReconnect?: boolean // Default: true
+	reconnectDelay?: number // Default: 3000ms
+}
+
+// Socket.IO Configuration
+interface SocketIOAnalyticsHandler {
+	type: "socket.io"
+	connection: Socket | string // Socket.IO instance or URL
+	options?: Partial<ManagerOptions & SocketOptions> // Socket.IO options
+	eventName?: string // Event name to emit (default: "analytics")
+	transform?: (event: AnalyticsEvent) => any
+	onError?: (error: Error) => void
+	onConnect?: () => void
+	onDisconnect?: (reason: string) => void
 }
 ```
 

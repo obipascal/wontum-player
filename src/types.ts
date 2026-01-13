@@ -1,3 +1,5 @@
+import { Socket } from "socket.io-client"
+
 /**
  * Player configuration options
  */
@@ -76,8 +78,11 @@ export interface AnalyticsConfig {
 	/** Enable analytics */
 	enabled?: boolean
 
-	/** Custom analytics endpoint */
+	/** Custom analytics endpoint (HTTP/HTTPS) */
 	endpoint?: string
+
+	/** WebSocket handler for real-time analytics streaming (supports both native WebSocket and Socket.IO) */
+	webSocket?: WebSocketAnalyticsHandler | SocketIOAnalyticsHandler
 
 	/** Session identifier */
 	sessionId?: string
@@ -87,6 +92,64 @@ export interface AnalyticsConfig {
 
 	/** Video identifier */
 	videoId?: string
+}
+
+/**
+ * Native WebSocket handler for real-time analytics
+ */
+export interface WebSocketAnalyticsHandler {
+	/** Type identifier for native WebSocket */
+	type: "websocket"
+
+	/** WebSocket connection instance or URL to connect to */
+	connection: WebSocket | string
+
+	/** Optional: Transform event before sending (allows filtering, formatting, etc.) */
+	transform?: (event: AnalyticsEvent) => any
+
+	/** Optional: Error handler for WebSocket errors */
+	onError?: (error: Event) => void
+
+	/** Optional: Handler for when WebSocket connection opens */
+	onOpen?: (event: Event) => void
+
+	/** Optional: Handler for when WebSocket connection closes */
+	onClose?: (event: CloseEvent) => void
+
+	/** Optional: Reconnect automatically on disconnect (default: true) */
+	autoReconnect?: boolean
+
+	/** Optional: Reconnect delay in milliseconds (default: 3000) */
+	reconnectDelay?: number
+}
+
+/**
+ * Socket.IO handler for real-time analytics
+ */
+export interface SocketIOAnalyticsHandler {
+	/** Type identifier for Socket.IO */
+	type: "socket.io"
+
+	/** Socket.IO client instance or URL to connect to */
+	connection: typeof Socket | string
+
+	/** Optional: Socket.IO connection options (used when connection is a URL) */
+	options?: Record<string, any>
+
+	/** Optional: Event name to emit (default: "analytics") */
+	eventName?: string
+
+	/** Optional: Transform event before sending (allows filtering, formatting, etc.) */
+	transform?: (event: AnalyticsEvent) => any
+
+	/** Optional: Error handler */
+	onError?: (error: Error) => void
+
+	/** Optional: Handler for when connection is established */
+	onConnect?: () => void
+
+	/** Optional: Handler for when connection is lost */
+	onDisconnect?: (reason: string) => void
 }
 
 /**

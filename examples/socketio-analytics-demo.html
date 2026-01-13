@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Socket.IO Analytics Demo - Wontum Player</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			body {
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+				color: #fff;
+				padding: 20px;
+				min-height: 100vh;
+			}
+
+			.container {
+				max-width: 1400px;
+				margin: 0 auto;
+			}
+
+			h1 {
+				font-size: 2.5rem;
+				margin-bottom: 10px;
+				text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+			}
+
+			.subtitle {
+				color: rgba(255, 255, 255, 0.9);
+				margin-bottom: 30px;
+				font-size: 1.1rem;
+			}
+
+			.badge {
+				display: inline-block;
+				background: rgba(255, 255, 255, 0.2);
+				padding: 4px 12px;
+				border-radius: 12px;
+				font-size: 0.85rem;
+				margin-left: 10px;
+				font-weight: 600;
+			}
+
+			.grid {
+				display: grid;
+				grid-template-columns: 2fr 1fr;
+				gap: 20px;
+				margin-bottom: 20px;
+			}
+
+			@media (max-width: 1024px) {
+				.grid {
+					grid-template-columns: 1fr;
+				}
+			}
+
+			.player-section {
+				background: white;
+				border-radius: 16px;
+				overflow: hidden;
+				box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+			}
+
+			#player-container {
+				width: 100%;
+				aspect-ratio: 16/9;
+			}
+
+			.analytics-panel {
+				background: rgba(255, 255, 255, 0.95);
+				border-radius: 16px;
+				padding: 25px;
+				box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+				color: #333;
+			}
+
+			.panel-header {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				margin-bottom: 20px;
+				padding-bottom: 20px;
+				border-bottom: 2px solid #e0e0e0;
+			}
+
+			.status-indicator {
+				width: 16px;
+				height: 16px;
+				border-radius: 50%;
+				background: #ef4444;
+				box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+				animation: pulse 2s ease-in-out infinite;
+			}
+
+			.status-indicator.connected {
+				background: #10b981;
+				box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+			}
+
+			@keyframes pulse {
+				0%,
+				100% {
+					opacity: 1;
+				}
+				50% {
+					opacity: 0.6;
+				}
+			}
+
+			.panel-title {
+				font-size: 1.4rem;
+				font-weight: 700;
+				color: #667eea;
+			}
+
+			.connection-info {
+				background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+				padding: 15px;
+				border-radius: 10px;
+				margin-bottom: 20px;
+				font-size: 0.9rem;
+				border-left: 4px solid #667eea;
+			}
+
+			.connection-label {
+				font-weight: 600;
+				color: #666;
+				margin-bottom: 5px;
+			}
+
+			.connection-url {
+				color: #667eea;
+				font-family: "Courier New", monospace;
+				font-size: 0.85rem;
+				word-break: break-all;
+			}
+
+			.metrics-grid {
+				display: grid;
+				grid-template-columns: repeat(2, 1fr);
+				gap: 15px;
+				margin-bottom: 25px;
+			}
+
+			.metric-card {
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+				padding: 20px;
+				border-radius: 12px;
+				color: white;
+				box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+			}
+
+			.metric-label {
+				font-size: 0.75rem;
+				opacity: 0.9;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
+				margin-bottom: 8px;
+			}
+
+			.metric-value {
+				font-size: 2rem;
+				font-weight: 700;
+			}
+
+			.events-section {
+				background: rgba(255, 255, 255, 0.95);
+				border-radius: 16px;
+				padding: 25px;
+				box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+				color: #333;
+			}
+
+			.events-header {
+				font-size: 1.4rem;
+				font-weight: 700;
+				margin-bottom: 20px;
+				padding-bottom: 20px;
+				border-bottom: 2px solid #e0e0e0;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				color: #667eea;
+			}
+
+			.clear-btn {
+				background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+				color: white;
+				border: none;
+				padding: 8px 16px;
+				border-radius: 8px;
+				font-size: 0.9rem;
+				font-weight: 600;
+				cursor: pointer;
+				transition: transform 0.2s, box-shadow 0.2s;
+				box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+			}
+
+			.clear-btn:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4);
+			}
+
+			.events-list {
+				max-height: 450px;
+				overflow-y: auto;
+			}
+
+			.events-list::-webkit-scrollbar {
+				width: 10px;
+			}
+
+			.events-list::-webkit-scrollbar-track {
+				background: #f0f0f0;
+				border-radius: 5px;
+			}
+
+			.events-list::-webkit-scrollbar-thumb {
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+				border-radius: 5px;
+			}
+
+			.events-list::-webkit-scrollbar-thumb:hover {
+				background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+			}
+
+			.event-item {
+				background: white;
+				padding: 15px;
+				margin-bottom: 10px;
+				border-radius: 10px;
+				border-left: 4px solid #667eea;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+				font-size: 0.9rem;
+				animation: slideIn 0.4s ease;
+				transition: transform 0.2s;
+			}
+
+			.event-item:hover {
+				transform: translateX(5px);
+			}
+
+			@keyframes slideIn {
+				from {
+					opacity: 0;
+					transform: translateX(-20px);
+				}
+				to {
+					opacity: 1;
+					transform: translateX(0);
+				}
+			}
+
+			.event-type {
+				font-weight: 700;
+				color: #667eea;
+				margin-bottom: 6px;
+				font-size: 1rem;
+			}
+
+			.event-time {
+				font-size: 0.75rem;
+				color: #999;
+			}
+
+			.event-data {
+				font-size: 0.75rem;
+				color: #666;
+				margin-top: 8px;
+				font-family: "Courier New", monospace;
+				background: #f5f5f5;
+				padding: 8px;
+				border-radius: 5px;
+			}
+
+			.info-box {
+				background: rgba(255, 193, 7, 0.1);
+				border-left: 4px solid #ffc107;
+				padding: 15px;
+				border-radius: 8px;
+				margin-bottom: 20px;
+				color: #333;
+			}
+
+			.info-box strong {
+				color: #f59e0b;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1>🔌 Socket.IO Analytics <span class="badge">Real-time</span></h1>
+			<p class="subtitle">Stream video analytics in real-time using Socket.IO with Wontum Player</p>
+
+			<div class="info-box"><strong>Note:</strong> This demo uses a mock Socket.IO echo server. In production, connect to your Socket.IO backend server.</div>
+
+			<div class="grid">
+				<div class="player-section">
+					<div id="player-container"></div>
+				</div>
+
+				<div class="analytics-panel">
+					<div class="panel-header">
+						<div class="status-indicator" id="socketStatus"></div>
+						<div class="panel-title">Live Metrics</div>
+					</div>
+
+					<div class="connection-info">
+						<div class="connection-label">Socket.IO Server:</div>
+						<div class="connection-url" id="socketUrl">Connecting...</div>
+					</div>
+
+					<div class="metrics-grid">
+						<div class="metric-card">
+							<div class="metric-label">Events Sent</div>
+							<div class="metric-value" id="eventCount">0</div>
+						</div>
+						<div class="metric-card">
+							<div class="metric-label">Play Time</div>
+							<div class="metric-value" id="playTime">0s</div>
+						</div>
+						<div class="metric-card">
+							<div class="metric-label">Buffer Time</div>
+							<div class="metric-value" id="bufferTime">0ms</div>
+						</div>
+						<div class="metric-card">
+							<div class="metric-label">Rebuffers</div>
+							<div class="metric-value" id="rebufferCount">0</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="events-section">
+				<div class="events-header">
+					<span>📡 Socket.IO Events Stream</span>
+					<button class="clear-btn" onclick="clearEvents()">Clear Events</button>
+				</div>
+				<div class="events-list" id="eventsList"></div>
+			</div>
+		</div>
+
+		<!-- Include Socket.IO client -->
+		<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+		<script type="module">
+			import { WontumPlayer } from "../dist/wontum-player.esm.js"
+
+			// Mock Socket.IO server URL (in production, use your real Socket.IO server)
+			const SOCKET_URL = "https://echo.websocket.org" // This won't work for Socket.IO, just for demo
+
+			// Track events for display
+			let eventsReceived = []
+
+			// For demo purposes, create a mock Socket.IO-like object
+			// In production, you would use: const socket = io(SOCKET_URL)
+			const socket = {
+				connected: false,
+				on(event, callback) {
+					this[`_on_${event}`] = callback
+				},
+				emit(event, data) {
+					console.log("Socket.IO emit:", event, data)
+					// In production, this would send to your server
+				},
+				disconnect() {
+					this.connected = false
+				},
+			}
+
+			// Simulate connection for demo
+			setTimeout(() => {
+				socket.connected = true
+				if (socket._on_connect) socket._on_connect()
+			}, 500)
+
+			// Initialize player with Socket.IO analytics
+			const player = new WontumPlayer({
+				src: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8", // Demo HLS stream
+				container: "#player-container",
+				autoplay: false,
+				muted: false,
+				controls: true,
+				analytics: {
+					enabled: true,
+					userId: `user_${Math.random().toString(36).substr(2, 9)}`,
+					videoId: "demo_video_socketio",
+					sessionId: `session_${Date.now()}`,
+					// Socket.IO configuration
+					webSocket: {
+						type: "socket.io",
+						connection: socket, // Use Socket.IO instance
+						eventName: "video_analytics", // Custom event name
+						// Transform event to custom format
+						transform: (event) => ({
+							action: "video_event",
+							timestamp: new Date(event.timestamp).toISOString(),
+							event: event.eventType,
+							video: {
+								id: event.videoId,
+								metrics: {
+									playTime: event.data.totalPlayTime,
+									bufferTime: event.data.totalBufferTime,
+									rebuffers: event.data.rebufferCount,
+									seeks: event.data.seekCount,
+								},
+							},
+							user: {
+								id: event.userId,
+								session: event.sessionId,
+							},
+						}),
+						onConnect: () => {
+							console.log("✅ Socket.IO connected")
+							document.getElementById("socketStatus").classList.add("connected")
+							document.getElementById("socketUrl").textContent = "Connected (Mock Server)"
+						},
+						onError: (error) => {
+							console.error("❌ Socket.IO error:", error)
+							document.getElementById("socketStatus").classList.remove("connected")
+						},
+						onDisconnect: (reason) => {
+							console.log("🔌 Socket.IO disconnected:", reason)
+							document.getElementById("socketStatus").classList.remove("connected")
+						},
+					},
+				},
+			})
+
+			// Listen to player events to display in UI
+			const eventTypes = ["play", "pause", "ended", "seeking", "seeked", "timeupdate", "volumechange", "qualitychange", "waiting", "playing", "error"]
+
+			eventTypes.forEach((eventType) => {
+				player.on(eventType, (event) => {
+					// Don't show timeupdate events (too frequent)
+					if (eventType === "timeupdate") return
+
+					addEventToList(eventType, event.data)
+					updateMetrics()
+				})
+			})
+
+			function addEventToList(eventType, data) {
+				eventsReceived.push({ type: eventType, data, time: new Date() })
+
+				const eventsList = document.getElementById("eventsList")
+				const eventItem = document.createElement("div")
+				eventItem.className = "event-item"
+
+				const time = new Date().toLocaleTimeString()
+				const dataStr = data ? JSON.stringify(data, null, 2).substring(0, 150) : ""
+
+				eventItem.innerHTML = `
+					<div class="event-type">📤 ${eventType}</div>
+					<div class="event-time">${time}</div>
+					${dataStr ? `<div class="event-data">${dataStr}...</div>` : ""}
+				`
+
+				eventsList.insertBefore(eventItem, eventsList.firstChild)
+
+				// Keep only last 50 events in DOM
+				while (eventsList.children.length > 50) {
+					eventsList.removeChild(eventsList.lastChild)
+				}
+			}
+
+			function updateMetrics() {
+				const metrics = player.analytics.getMetrics()
+
+				document.getElementById("eventCount").textContent = eventsReceived.length
+				document.getElementById("playTime").textContent = `${Math.round(metrics.totalPlayTime / 1000)}s`
+				document.getElementById("bufferTime").textContent = `${Math.round(metrics.totalBufferTime)}ms`
+				document.getElementById("rebufferCount").textContent = metrics.rebufferCount
+			}
+
+			// Make clearEvents global
+			window.clearEvents = function () {
+				eventsReceived = []
+				document.getElementById("eventsList").innerHTML = ""
+				updateMetrics()
+			}
+
+			// Update metrics every second
+			setInterval(updateMetrics, 1000)
+
+			// Add initial message
+			setTimeout(() => {
+				addEventToList("info", {
+					message: "Socket.IO analytics streaming initialized. Play the video to see events!",
+				})
+			}, 1000)
+		</script>
+	</body>
+</html>

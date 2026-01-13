@@ -9,7 +9,19 @@ export { WontumFileInfo } from "./file-info"
 export { WontumPlayerReact, useWontumPlayer, WontumPlayerProvider, useWontumPlayerContext } from "./react"
 
 // Type exports
-export type { WontumPlayerConfig, PlayerTheme, S3Config, AnalyticsConfig, PlayerState, PlayerEvent, PlayerEventType, AnalyticsEvent, QualityLevel } from "./types"
+export type {
+	WontumPlayerConfig,
+	PlayerTheme,
+	S3Config,
+	AnalyticsConfig,
+	WebSocketAnalyticsHandler,
+	SocketIOAnalyticsHandler,
+	PlayerState,
+	PlayerEvent,
+	PlayerEventType,
+	AnalyticsEvent,
+	QualityLevel,
+} from "./types"
 
 export type { VideoFileInfo } from "./file-info"
 
