@@ -1134,6 +1134,92 @@ pipButton.addEventListener("click", async () => {
 
 **Note:** Picture-in-Picture is supported in most modern browsers. The player includes a built-in PiP button in the controls.
 
+### File Information Utility
+
+The SDK includes a `WontumFileInfo` utility class to extract metadata from video files before uploading or processing them.
+
+```typescript
+import { WontumFileInfo } from "@obipascal/player"
+
+// Example: File input handling
+const fileInput = document.querySelector<HTMLInputElement>("#video-upload")
+
+fileInput.addEventListener("change", async (event) => {
+	const file = event.target.files?.[0]
+	if (!file) return
+
+	try {
+		// Create instance (validates it's a video file)
+		const videoInfo = new WontumFileInfo(file)
+
+		// Extract metadata
+		await videoInfo.extract()
+
+		// Access properties
+		console.log("Video Information:")
+		console.log("- Width:", videoInfo.width) // e.g., 1920
+		console.log("- Height:", videoInfo.height) // e.g., 1080
+		console.log("- Aspect Ratio:", videoInfo.aspectRatio) // e.g., "16:9"
+		console.log("- Quality:", videoInfo.quality) // e.g., "Full HD (1080p)"
+		console.log("- Duration (raw):", videoInfo.durationInSeconds, "seconds") // e.g., 125.5
+		console.log("- Formatted Duration:", videoInfo.durationFormatted) // e.g., "02:05"
+		console.log("- File Size (raw):", videoInfo.sizeInBytes, "bytes") // e.g., 52428800
+		console.log("- Formatted Size:", videoInfo.sizeFormatted) // e.g., "50 MB"
+		console.log("- MIME Type:", videoInfo.mimeType) // e.g., "video/mp4"
+		console.log("- File Name:", videoInfo.fileName) // e.g., "my-video.mp4"
+		console.log("- Extension:", videoInfo.fileExtension) // e.g., ".mp4"
+		console.log("- Bitrate:", videoInfo.bitrate, "kbps") // e.g., 3500
+
+		// Get all info as object
+		const allInfo = videoInfo.getInfo()
+		console.log(allInfo)
+
+		// Clean up when done
+		videoInfo.destroy()
+	} catch (error) {
+		console.error("Error extracting video info:", error.message)
+		// Throws error if file is not a video
+	}
+})
+```
+
+#### WontumFileInfo API
+
+**Constructor:**
+
+```typescript
+new WontumFileInfo(file: File)
+```
+
+Throws an error if the file is not a valid video file.
+
+**Methods:**
+
+- `extract(): Promise<VideoFileInfo>` - Extracts metadata from the video file
+- `getInfo(): VideoFileInfo | null` - Returns the extracted information object
+- `destroy(): void` - Cleans up resources
+
+**Properties (available after calling `extract()`):**
+
+- `width: number` - Video width in pixels
+- `height: number` - Video height in pixels
+- `aspectRatio: string` - Aspect ratio (e.g., "16:9", "4:3", "21:9")
+- `quality: string` - Quality description (e.g., "4K (2160p)", "Full HD (1080p)")
+- `size: number` - File size in bytes (raw value for computation)
+- `sizeInBytes: number` - Alias for size (raw value for computation)
+- `sizeFormatted: string` - Human-readable size (e.g., "50 MB")
+- `duration: number` - Duration in seconds (raw value for computation)
+- `durationInSeconds: number` - Alias for duration (raw value for computation)
+- `durationFormatted: string` - Formatted duration (e.g., "01:23:45")
+- `mimeType: string` - MIME type (e.g., "video/mp4")
+- `fileName: string` - Original file name
+- `fileExtension: string` - File extension (e.g., ".mp4")
+- `bitrate: number | undefined` - Estimated bitrate in kbps
+
+**Supported Video Formats:**
+
+`.mp4`, `.webm`, `.ogg`, `.mov`, `.avi`, `.mkv`, `.flv`, `.wmv`, `.m4v`, `.3gp`, `.ts`, `.m3u8`
+
 ## 📋 Complete API Reference
 
 For detailed API documentation including all methods, events, types, and configuration options, see **[API-REFERENCE.md](./API-REFERENCE.md)**.
