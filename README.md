@@ -240,6 +240,7 @@ function VideoPlayer({ videoUrl }: VideoPlayerProps) {
 
 	const s3config: S3Config = {
 		cloudFrontDomains: [url.hostname],
+		withCredentials: true, // Enable cookies for CloudFront signed cookies
 		signUrl: async (resourceUrl: string) => {
 			try {
 				const { data } = await refetch({
@@ -336,6 +337,7 @@ async function initializePlayer() {
 		container: "#player",
 		s3Config: {
 			cloudFrontDomains: ["media.yourdomain.com"], // Your CloudFront domain
+			withCredentials: true, // Enable cookies for all HLS requests (required for CloudFront signed cookies)
 			signUrl: async (url) => {
 				// This function is called when player needs to access a video
 				// Call your backend to refresh/set cookies if needed
@@ -734,9 +736,19 @@ interface WontumPlayerConfig {
 	poster?: string // Poster image URL
 	preload?: "none" | "metadata" | "auto" // Preload strategy
 	theme?: PlayerTheme // Custom theme
-	s3Config?: S3Config // S3 configuration
+	s3Config?: S3Config // S3/CloudFront configuration
 	analytics?: AnalyticsConfig // Analytics configuration
 	hlsConfig?: Partial<any> // HLS.js config override
+	subtitles?: SubtitleTrack[] // Subtitle tracks
+	stickyControls?: boolean // Keep controls always visible
+}
+
+interface S3Config {
+	signUrl?: (url: string) => Promise<string> // Sign URL and set cookies
+	cloudFrontDomains?: string[] // CloudFront domains (e.g., ['media.example.com'])
+	withCredentials?: boolean // Enable cookies for HLS requests (default: false, required for CloudFront signed cookies)
+	region?: string // S3 region
+	endpoint?: string // Custom S3 endpoint
 }
 ```
 
@@ -758,10 +770,16 @@ player.setPlaybackRate(rate: number): void  // 0.5, 1, 1.5, 2, etc.
 
 // Quality control
 player.setQuality(qualityIndex: number): void
+player.getQualities(): QualityLevel[]
 
 // Fullscreen
 player.enterFullscreen(): void
 player.exitFullscreen(): void
+
+// Picture-in-Picture
+player.enterPictureInPicture(): Promise<void>
+player.exitPictureInPicture(): Promise<void>
+player.togglePictureInPicture(): Promise<void>
 
 // State
 player.getState(): PlayerState
@@ -792,6 +810,8 @@ type PlayerEventType =
 	| "error"
 	| "qualitychange"
 	| "fullscreenchange"
+	| "pictureinpictureenter"
+	| "pictureinpictureexit"
 ```
 
 ### React Components
@@ -994,6 +1014,15 @@ player.on("qualitychange", (event) => {
 	console.log("Quality changed to:", event.data.quality)
 })
 
+// Picture-in-Picture events
+player.on("pictureinpictureenter", () => {
+	console.log("Entered Picture-in-Picture mode")
+})
+
+player.on("pictureinpictureexit", () => {
+	console.log("Exited Picture-in-Picture mode")
+})
+
 // Buffer events
 player.on("waiting", () => console.log("Buffering..."))
 player.on("canplay", () => console.log("Ready to play"))
@@ -1065,9 +1094,45 @@ player.setQuality(2) // Set to quality index 2
 player.enterFullscreen()
 player.exitFullscreen()
 
+// Picture-in-Picture
+await player.enterPictureInPicture()
+await player.exitPictureInPicture()
+await player.togglePictureInPicture()
+
 // Cleanup
 player.destroy() // Remove player and clean up resources
 ```
+
+### Picture-in-Picture Mode
+
+Enable floating video that stays on top while users work in other apps:
+
+```typescript
+const player = new WontumPlayer({
+	src: "https://example.com/video.m3u8",
+	container: "#player",
+})
+
+// Enter PiP mode
+await player.enterPictureInPicture()
+
+// Listen for PiP events
+player.on("pictureinpictureenter", () => {
+	console.log("Video is now floating!")
+})
+
+player.on("pictureinpictureexit", () => {
+	console.log("Back to normal mode")
+})
+
+// Custom button to toggle PiP
+const pipButton = document.getElementById("pip-btn")
+pipButton.addEventListener("click", async () => {
+	await player.togglePictureInPicture()
+})
+```
+
+**Note:** Picture-in-Picture is supported in most modern browsers. The player includes a built-in PiP button in the controls.
 
 ## 📋 Complete API Reference
 
@@ -1083,6 +1148,7 @@ For detailed API documentation including all methods, events, types, and configu
 - **Quality:** `setQuality(index)`, `getQualities()`
 - **Playback Rate:** `setPlaybackRate(rate)`
 - **Fullscreen:** `enterFullscreen()`, `exitFullscreen()`
+- **Picture-in-Picture:** `enterPictureInPicture()`, `exitPictureInPicture()`, `togglePictureInPicture()`
 - **State:** `getState()`, `getCurrentTime()`, `getDuration()`
 - **Lifecycle:** `destroy()`
 
@@ -1129,9 +1195,9 @@ Contributions are welcome! Please follow these steps:
 
 ## 💬 Support
 
-- **Issues:** [GitHub Issues](https://github.com/yourorg/wontum-player/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/yourorg/wontum-player/discussions)
-- **Email:** support@wontum.com
+- **Issues:** [GitHub Issues](https://github.com/obipascal/wontum-player/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/obipascal/wontum-player/discussions)
+- **Email:** pascalobi83@gmail.com
 
 ## 🙏 Acknowledgments
 

@@ -13,7 +13,9 @@ export class UIController {
 	private skipBackwardButton: HTMLElement
 	private skipForwardButton: HTMLElement
 	private volumeButton: HTMLElement
+	private volumeContainer: HTMLElement
 	private fullscreenButton: HTMLElement
+	private pipButton: HTMLElement
 	private settingsButton: HTMLElement
 	// private timeDisplay: HTMLElement
 	private volumeSlider: HTMLInputElement
@@ -21,6 +23,7 @@ export class UIController {
 	// private controlsVisible = true
 	private hideControlsTimeout: number | null = null
 	private stickyControls = false
+	private isVolumeSliderActive = false
 
 	constructor(container: HTMLElement, player: WontumPlayer) {
 		this.container = container
@@ -38,7 +41,9 @@ export class UIController {
 		this.skipBackwardButton = this.controlsContainer.querySelector(".wontum-skip-backward-btn")!
 		this.skipForwardButton = this.controlsContainer.querySelector(".wontum-skip-forward-btn")!
 		this.volumeButton = this.controlsContainer.querySelector(".wontum-volume-btn")!
+		this.volumeContainer = this.controlsContainer.querySelector(".wontum-volume-container")!
 		this.fullscreenButton = this.controlsContainer.querySelector(".wontum-fullscreen-btn")!
+		this.pipButton = this.controlsContainer.querySelector(".wontum-pip-btn")!
 		this.settingsButton = this.controlsContainer.querySelector(".wontum-settings-btn")!
 		// this.timeDisplay = this.controlsContainer.querySelector(".wontum-time-display")!
 		this.volumeSlider = this.controlsContainer.querySelector(".wontum-volume-slider")! as HTMLInputElement
@@ -172,18 +177,20 @@ export class UIController {
       .wontum-progress-container {
         position: absolute;
         bottom: 58px;
-        left: 0;
-        right: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 70%;
+        max-width: 600px;
         height: 5px;
         cursor: pointer;
         z-index: 12;
-        padding: 0 20px;
+        padding: 0;
         transition: height 0.2s ease, opacity 0.3s ease, transform 0.3s ease;
       }
       
       .wontum-progress-container.hidden {
         opacity: 0;
-        transform: translateY(100%);
+        transform: translateX(-50%) translateY(100%);
         pointer-events: none;
       }
       
@@ -269,6 +276,7 @@ export class UIController {
         position: relative;
         display: flex;
         align-items: center;
+        gap: 0;
       }
       
       .wontum-volume-slider-wrapper {
@@ -280,16 +288,29 @@ export class UIController {
         backdrop-filter: blur(10px);
         padding: 12px 8px;
         border-radius: 6px;
-        margin-bottom: 8px;
+        margin-bottom: 5px;
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.2s ease;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 20;
       }
       
-      .wontum-volume-container:hover .wontum-volume-slider-wrapper {
+      .wontum-volume-container:hover .wontum-volume-slider-wrapper,
+      .wontum-volume-slider-wrapper:hover {
         opacity: 1;
         pointer-events: all;
+      }
+      
+      /* Add a bridge area between button and slider to prevent gap */
+      .wontum-volume-container::before {
+        content: '';
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        right: 0;
+        height: 10px;
+        background: transparent;
       }
       
       .wontum-volume-slider {
@@ -623,6 +644,10 @@ export class UIController {
           </div>
         </div>
         
+        <button class="wontum-btn wontum-pip-btn" aria-label="Picture-in-Picture">
+          ${this.getPipIcon()}
+        </button>
+        
         <button class="wontum-btn wontum-fullscreen-btn" aria-label="Fullscreen">
           ${this.getFullscreenIcon()}
         </button>
@@ -682,6 +707,27 @@ export class UIController {
 			}
 		})
 
+		// Keep volume slider visible while hovering/using it
+		this.volumeContainer.addEventListener("mouseenter", () => {
+			this.isVolumeSliderActive = true
+		})
+
+		this.volumeContainer.addEventListener("mouseleave", () => {
+			this.isVolumeSliderActive = false
+		})
+
+		// Prevent hiding controls while adjusting volume
+		this.volumeSlider.addEventListener("input", () => {
+			this.isVolumeSliderActive = true
+			this.resetHideControlsTimeout()
+		})
+
+		this.volumeSlider.addEventListener("change", () => {
+			setTimeout(() => {
+				this.isVolumeSliderActive = false
+			}, 500)
+		})
+
 		// Fullscreen
 		this.fullscreenButton.addEventListener("click", () => {
 			const state = this.player.getState()
@@ -689,6 +735,15 @@ export class UIController {
 				this.player.exitFullscreen()
 			} else {
 				this.player.enterFullscreen()
+			}
+		})
+
+		// Picture-in-Picture
+		this.pipButton.addEventListener("click", async () => {
+			try {
+				await this.player.togglePictureInPicture()
+			} catch (error) {
+				console.error("PiP error:", error)
 			}
 		})
 
@@ -939,6 +994,9 @@ export class UIController {
 		// Don't hide if sticky controls is enabled
 		if (this.stickyControls) return
 
+		// Don't hide if volume slider is being used
+		if (this.isVolumeSliderActive) return
+
 		const state = this.player.getState()
 		if (state.playing) {
 			this.controlsContainer.classList.add("hidden")
@@ -986,6 +1044,10 @@ export class UIController {
 
 	private getFullscreenIcon(): string {
 		return `<svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`
+	}
+
+	private getPipIcon(): string {
+		return `<svg viewBox="0 0 24 24"><path d="M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 1.98 2 1.98h18c1.1 0 2-.88 2-1.98V5c0-1.1-.9-2-2-2zm0 16.01H3V4.98h18v14.03z"/></svg>`
 	}
 
 	private getSkipBackwardIcon(): string {

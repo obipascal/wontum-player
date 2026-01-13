@@ -62,6 +62,9 @@ export interface S3Config {
 	/** CloudFront domain patterns to match (e.g., ['media.domain.com']) */
 	cloudFrontDomains?: string[]
 
+	/** Enable credentials (cookies) for HLS requests - required for CloudFront signed cookies */
+	withCredentials?: boolean
+
 	/** S3 bucket region */
 	region?: string
 
@@ -136,6 +139,8 @@ export type PlayerEventType =
 	// Custom player events
 	| "qualitychange"
 	| "fullscreenchange"
+	| "pictureinpictureenter"
+	| "pictureinpictureexit"
 	| "resize"
 
 export interface PlayerEvent {

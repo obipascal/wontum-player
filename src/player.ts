@@ -226,14 +226,17 @@ export class WontumPlayer {
 
 			// Check if HLS is supported
 			if (Hls.isSupported()) {
-				// Merge user's HLS config with required settings for CloudFront signed cookies
+				// Check if credentials should be enabled (for CloudFront signed cookies)
+				const withCredentials = this.config.s3Config?.withCredentials ?? false
+
+				// Merge user's HLS config with credential settings
 				const hlsConfig = {
 					...this.config.hlsConfig,
 					xhrSetup: (xhr: XMLHttpRequest, url: string) => {
-						// Enable credentials to send cookies with all requests
-						xhr.withCredentials = true
-
-						// Call user's xhrSetup if provided
+						// Enable credentials if configured
+						if (withCredentials) {
+							xhr.withCredentials = true
+						}
 						if (this.config.hlsConfig?.xhrSetup) {
 							this.config.hlsConfig.xhrSetup(xhr, url)
 						}
@@ -374,6 +377,38 @@ export class WontumPlayer {
 			document.exitFullscreen()
 			this.state.fullscreen = false
 			this.emit("fullscreenchange", { fullscreen: false })
+		}
+	}
+
+	public async enterPictureInPicture(): Promise<void> {
+		if (document.pictureInPictureEnabled && !this.videoElement.disablePictureInPicture) {
+			try {
+				await this.videoElement.requestPictureInPicture()
+				this.emit("pictureinpictureenter", {})
+			} catch (error) {
+				console.error("Failed to enter Picture-in-Picture:", error)
+				throw error
+			}
+		}
+	}
+
+	public async exitPictureInPicture(): Promise<void> {
+		if (document.pictureInPictureElement) {
+			try {
+				await document.exitPictureInPicture()
+				this.emit("pictureinpictureexit", {})
+			} catch (error) {
+				console.error("Failed to exit Picture-in-Picture:", error)
+				throw error
+			}
+		}
+	}
+
+	public async togglePictureInPicture(): Promise<void> {
+		if (document.pictureInPictureElement) {
+			await this.exitPictureInPicture()
+		} else {
+			await this.enterPictureInPicture()
 		}
 	}
 
