@@ -1390,6 +1390,66 @@ pipButton.addEventListener("click", async () => {
 
 The SDK includes a `WontumFileInfo` utility class to extract metadata from video files before uploading or processing them.
 
+#### React Hook (useVideoFileInfo)
+
+For React applications, use the `useVideoFileInfo` hook for automatic state management:
+
+```tsx
+import { useVideoFileInfo } from "@obipascal/player"
+import { useState } from "react"
+
+function VideoUploader() {
+	const [selectedFile, setSelectedFile] = useState<File | null>(null)
+	const { info, loading, error, refetch } = useVideoFileInfo(selectedFile)
+
+	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0]
+		setSelectedFile(file || null)
+	}
+
+	return (
+		<div>
+			<input type="file" accept="video/*" onChange={handleFileChange} />
+
+			{loading && <p>Analyzing video...</p>}
+
+			{error && (
+				<div>
+					<p style={{ color: "red" }}>Error: {error}</p>
+					<button onClick={refetch}>Retry</button>
+				</div>
+			)}
+
+			{info && (
+				<div>
+					<h3>Video Information</h3>
+					<ul>
+						<li>
+							Resolution: {info.width} × {info.height}
+						</li>
+						<li>Aspect Ratio: {info.aspectRatio}</li>
+						<li>Quality: {info.quality}</li>
+						<li>Duration: {info.durationFormatted}</li>
+						<li>Size: {info.sizeFormatted}</li>
+						<li>Bitrate: {info.bitrate} kbps</li>
+						<li>Frame Rate: {info.frameRate} fps</li>
+						<li>Audio: {info.hasAudio ? `${info.audioChannels} channels` : "No audio"}</li>
+					</ul>
+
+					{/* Validation example */}
+					{info.aspectRatio !== "16:9" && <p style={{ color: "orange" }}>⚠️ Video should be 16:9 aspect ratio</p>}
+					{info.height < 720 && <p style={{ color: "red" }}>❌ Minimum resolution is 720p</p>}
+					{!info.hasAudio && <p style={{ color: "red" }}>❌ Video must have audio</p>}
+					{info.audioChannels !== 2 && <p style={{ color: "orange" }}>⚠️ Audio should be stereo (2 channels)</p>}
+				</div>
+			)}
+		</div>
+	)
+}
+```
+
+#### Vanilla JavaScript
+
 ```typescript
 import { WontumFileInfo } from "@obipascal/player"
 
