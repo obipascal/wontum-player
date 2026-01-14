@@ -1,8 +1,9 @@
 import * as React from "react"
 import { useEffect, useRef, useState, useCallback } from "react"
 import { WontumPlayer } from "./player"
-import { WontumPlayerConfig, PlayerState } from "./types"
+import { WontumPlayerConfig, PlayerState, AnalyticsConfig, AnalyticsEvent } from "./types"
 import { WontumFileInfo, VideoFileInfo } from "./file-info"
+import { Analytics } from "./analytics"
 
 export interface WontumPlayerReactProps extends Omit<WontumPlayerConfig, "container"> {
 	/** Callback when player is ready */
@@ -286,4 +287,125 @@ export const useVideoFileInfo = (file: File | null | undefined): UseVideoFileInf
 	}, [extractInfo])
 
 	return { info, loading, error, refetch: extractInfo }
+}
+
+/**
+ * Result type for useAnalytics hook
+ */
+export interface UseAnalyticsResult {
+	/** Track a custom event */
+	trackEvent: (eventType: string, data?: Record<string, any>) => void
+
+	/** Get all tracked events */
+	getEvents: () => AnalyticsEvent[]
+
+	/** Get analytics metrics (session duration, buffer time, etc.) */
+	getMetrics: () => Record<string, any>
+
+	/** WebSocket connection status (for websocket/socket.io analytics) */
+	connected: boolean
+
+	/** Session ID for this analytics instance */
+	sessionId: string
+}
+
+/**
+ * React hook for analytics tracking
+ * Automatically handles lifecycle management and cleanup
+ *
+ * @example
+ * ```tsx
+ * const { trackEvent, getMetrics, connected } = useAnalytics({
+ *   enabled: true,
+ *   endpoint: "https://api.example.com/analytics",
+ *   videoId: "video-123",
+ *   userId: "user-456",
+ *   webSocket: {
+ *     type: "socket.io",
+ *     url: "https://analytics.example.com",
+ *     auth: { token: "your-token" }
+ *   }
+ * })
+ *
+ * // Track custom events
+ * trackEvent("button_clicked", { buttonName: "share" })
+ * ```
+ */
+export const useAnalytics = (config?: AnalyticsConfig): UseAnalyticsResult => {
+	const analyticsRef = useRef<Analytics | null>(null)
+	const [connected, setConnected] = useState(false)
+	const [sessionId, setSessionId] = useState("")
+
+	// Initialize analytics instance
+	useEffect(() => {
+		// Create analytics instance
+		const analytics = new Analytics(config)
+		analyticsRef.current = analytics
+		setSessionId(analytics.getMetrics().sessionId)
+
+		// Monitor WebSocket connection status if websocket is configured
+		if (config?.webSocket) {
+			const checkConnection = setInterval(() => {
+				if (!analyticsRef.current) {
+					setConnected(false)
+					return
+				}
+
+				// Check native WebSocket connection
+				const wsConfig = config.webSocket
+				if (wsConfig && "type" in wsConfig && wsConfig.type === "websocket") {
+					const ws = (analyticsRef.current as any).webSocket as WebSocket | null
+					setConnected(ws?.readyState === WebSocket.OPEN)
+				}
+				// Check Socket.IO connection
+				else if (wsConfig && "type" in wsConfig && wsConfig.type === "socket.io") {
+					const socket = (analyticsRef.current as any).socketIO
+					setConnected(socket?.connected ?? false)
+				} else if (wsConfig) {
+					// Backward compatibility: assume native WebSocket
+					const ws = (analyticsRef.current as any).webSocket as WebSocket | null
+					setConnected(ws?.readyState === WebSocket.OPEN)
+				}
+			}, 1000)
+
+			return () => {
+				clearInterval(checkConnection)
+				if (analyticsRef.current) {
+					analyticsRef.current.destroy()
+					analyticsRef.current = null
+				}
+			}
+		}
+
+		// Cleanup on unmount
+		return () => {
+			if (analyticsRef.current) {
+				analyticsRef.current.destroy()
+				analyticsRef.current = null
+			}
+		}
+	}, [config])
+
+	// Memoized track event function
+	const trackEvent = useCallback((eventType: string, data?: Record<string, any>) => {
+		analyticsRef.current?.trackEvent(eventType, data)
+	}, [])
+
+	// Memoized get events function
+	const getEvents = useCallback((): AnalyticsEvent[] => {
+		return analyticsRef.current?.getEvents() ?? []
+	}, [])
+
+	// Memoized get metrics function
+	const getMetrics = useCallback((): Record<string, any> => {
+		return analyticsRef.current?.getMetrics() ?? {}
+	}, [])
+
+	return {
+		trackEvent,
+		getEvents,
+		getMetrics,
+		connected,
+		sessionId,
+	}
 }

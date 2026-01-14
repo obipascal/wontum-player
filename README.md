@@ -939,6 +939,77 @@ Each event includes Quality of Experience (QoE) metrics:
 - `rebufferCount` - Number of rebuffer events
 - `seekCount` - Number of seek operations
 
+### React Hook (useAnalytics)
+
+For React applications, use the `useAnalytics` hook for automatic lifecycle management:
+
+```tsx
+import { useAnalytics } from "@obipascal/player"
+import { useEffect } from "react"
+
+function VideoAnalyticsDashboard() {
+	const { trackEvent, getMetrics, connected, sessionId } = useAnalytics({
+		enabled: true,
+		endpoint: "https://api.example.com/analytics",
+		videoId: "video-123",
+		userId: "user-456",
+		webSocket: {
+			type: "socket.io",
+			url: "https://analytics.example.com",
+			auth: { token: "your-auth-token" },
+			eventName: "video_event",
+		},
+	})
+
+	// Track custom events
+	const handleShareClick = () => {
+		trackEvent("share_clicked", {
+			platform: "twitter",
+			videoTime: 125.5,
+		})
+	}
+
+	const handleBookmark = () => {
+		trackEvent("bookmark_added", {
+			timestamp: Date.now(),
+		})
+	}
+
+	// Display metrics
+	useEffect(() => {
+		const interval = setInterval(() => {
+			const metrics = getMetrics()
+			console.log("Session Metrics:", metrics)
+		}, 5000)
+
+		return () => clearInterval(interval)
+	}, [getMetrics])
+
+	return (
+		<div>
+			<h3>Analytics Dashboard</h3>
+			<p>Session ID: {sessionId}</p>
+			<p>WebSocket Status: {connected ? "🟢 Connected" : "🔴 Disconnected"}</p>
+
+			<button onClick={handleShareClick}>Share Video</button>
+			<button onClick={handleBookmark}>Bookmark</button>
+
+			{/* The hook automatically tracks session_start and session_end */}
+			{/* It cleans up on component unmount */}
+		</div>
+	)
+}
+```
+
+**Hook Features:**
+
+- ✅ Automatic lifecycle management (initialization and cleanup)
+- ✅ WebSocket/Socket.IO connection status monitoring
+- ✅ Track custom events with `trackEvent()`
+- ✅ Access metrics with `getMetrics()`
+- ✅ Access all events with `getEvents()`
+- ✅ Session ID available immediately
+
 ## API Reference
 
 ### WontumPlayer

@@ -6,7 +6,7 @@ export { UIController } from "./ui-controller"
 export { WontumFileInfo } from "./file-info"
 
 // React exports
-export { WontumPlayerReact, useWontumPlayer, WontumPlayerProvider, useWontumPlayerContext, useVideoFileInfo } from "./react"
+export { WontumPlayerReact, useWontumPlayer, WontumPlayerProvider, useWontumPlayerContext, useVideoFileInfo, useAnalytics } from "./react"
 
 // Type exports
 export type {
@@ -25,4 +25,4 @@ export type {
 
 export type { VideoFileInfo } from "./file-info"
 
-export type { WontumPlayerReactProps, UseVideoFileInfoResult } from "./react"
+export type { WontumPlayerReactProps, UseVideoFileInfoResult, UseAnalyticsResult } from "./react"
