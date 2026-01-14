@@ -1421,10 +1421,19 @@ fileInput.addEventListener("change", async (event) => {
 		console.log("- File Name:", videoInfo.fileName) // e.g., "my-video.mp4"
 		console.log("- Extension:", videoInfo.fileExtension) // e.g., ".mp4"
 		console.log("- Bitrate:", videoInfo.bitrate, "kbps") // e.g., 3500
+		console.log("- Frame Rate:", videoInfo.frameRate, "fps") // e.g., 30 or 60
+		console.log("- Has Audio:", videoInfo.hasAudio) // e.g., true
+		console.log("- Audio Channels:", videoInfo.audioChannels) // e.g., 2 (stereo)
 
 		// Get all info as object
 		const allInfo = videoInfo.getInfo()
 		console.log(allInfo)
+
+		// Validate against platform requirements
+		const isValid = validateVideo(videoInfo)
+		if (!isValid.valid) {
+			console.error("Validation errors:", isValid.errors)
+		}
 
 		// Clean up when done
 		videoInfo.destroy()
@@ -1433,6 +1442,56 @@ fileInput.addEventListener("change", async (event) => {
 		// Throws error if file is not a video
 	}
 })
+
+// Example validation function for educational platform
+function validateVideo(info: VideoFileInfo) {
+	const errors: string[] = []
+
+	// Aspect Ratio: 16:9 required
+	if (info.aspectRatio !== "16:9") {
+		errors.push(`Aspect ratio must be 16:9, got ${info.aspectRatio}`)
+	}
+
+	// Resolution: Minimum 1280×720
+	if (info.height < 720 || info.width < 1280) {
+		errors.push(`Minimum resolution is 1280×720, got ${info.width}×${info.height}`)
+	}
+
+	// File Format: .MP4 or .MOV
+	if (![".mp4", ".mov"].includes(info.fileExtension.toLowerCase())) {
+		errors.push(`File format must be MP4 or MOV, got ${info.fileExtension}`)
+	}
+
+	// Bitrate: 5-10 Mbps
+	if (info.bitrate && (info.bitrate < 5000 || info.bitrate > 10000)) {
+		errors.push(`Bitrate should be 5-10 Mbps, got ${info.bitrate} kbps`)
+	}
+
+	// Audio: Must be stereo (2 channels)
+	if (!info.hasAudio) {
+		errors.push("Video must have audio track")
+	} else if (info.audioChannels && info.audioChannels !== 2) {
+		errors.push(`Audio must be stereo (2 channels), got ${info.audioChannels}`)
+	}
+
+	// File Size: ≤4.0 GB
+	const maxSize = 4 * 1024 * 1024 * 1024 // 4GB in bytes
+	if (info.sizeInBytes > maxSize) {
+		errors.push(`File size must be ≤4GB, got ${info.sizeFormatted}`)
+	}
+
+	// Duration: 2 minutes to 2 hours
+	if (info.durationInSeconds < 120 || info.durationInSeconds > 7200) {
+		errors.push(`Duration must be 2min-2hrs, got ${info.durationFormatted}`)
+	}
+
+	// Frame Rate: 30 or 60 fps
+	if (info.frameRate && ![30, 60].includes(info.frameRate)) {
+		errors.push(`Frame rate should be 30 or 60 fps, got ${info.frameRate}`)
+	}
+
+	return { valid: errors.length === 0, errors }
+}
 ```
 
 #### WontumFileInfo API
@@ -1467,6 +1526,13 @@ Throws an error if the file is not a valid video file.
 - `fileName: string` - Original file name
 - `fileExtension: string` - File extension (e.g., ".mp4")
 - `bitrate: number | undefined` - Estimated bitrate in kbps
+- `frameRate: number | undefined` - Frame rate in fps (30, 60, etc.)
+- `hasAudio: boolean` - Whether video has an audio track
+- `audioChannels: number | undefined` - Number of audio channels (1=mono, 2=stereo)
+
+**Validation Use Case:**
+
+Perfect for validating videos against platform requirements (aspect ratio, resolution, format, bitrate, audio channels, file size, duration, frame rate).
 
 **Supported Video Formats:**
 

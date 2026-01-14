@@ -3,6 +3,15 @@
  * Extracts metadata from video files (width, height, duration, size, etc.)
  */
 
+// Extend HTMLVideoElement to include browser-specific properties
+declare global {
+	interface HTMLVideoElement {
+		mozHasAudio?: boolean
+		webkitAudioDecodedByteCount?: number
+		audioTracks?: { length: number }
+	}
+}
+
 export interface VideoFileInfo {
 	width: number
 	height: number
@@ -17,14 +26,17 @@ export interface VideoFileInfo {
 	fileName: string
 	fileExtension: string
 	bitrate?: number // kbps (estimated)
-	frameRate?: number
+	frameRate?: number // fps (frames per second)
+	audioChannels?: number // number of audio channels (1=mono, 2=stereo)
 	videoCodec?: string
 	audioCodec?: string
+	hasAudio?: boolean // whether video has audio track
 }
 
 export class WontumFileInfo {
 	private file: File
 	private videoElement: HTMLVideoElement | null = null
+	private audioContext: AudioContext | null = null
 	private info: VideoFileInfo | null = null
 
 	constructor(file: File) {
@@ -65,7 +77,7 @@ export class WontumFileInfo {
 				const objectUrl = URL.createObjectURL(this.file)
 
 				// Handle metadata loaded
-				this.videoElement.onloadedmetadata = () => {
+				this.videoElement.onloadedmetadata = async () => {
 					try {
 						if (!this.videoElement) {
 							reject(new Error("Video element not initialized"))
@@ -92,6 +104,12 @@ export class WontumFileInfo {
 						// Estimate bitrate (file size / duration)
 						const bitrate = duration > 0 ? Math.round((size * 8) / duration / 1000) : undefined
 
+						// Detect frame rate (approximate from video playback)
+						const frameRate = await this.detectFrameRate()
+
+						// Detect audio channels
+						const audioInfo = await this.detectAudioInfo(objectUrl)
+
 						this.info = {
 							width,
 							height,
@@ -106,6 +124,9 @@ export class WontumFileInfo {
 							fileName: this.file.name,
 							fileExtension,
 							bitrate,
+							frameRate,
+							audioChannels: audioInfo.channels,
+							hasAudio: audioInfo.hasAudio,
 						}
 
 						// Clean up
@@ -150,6 +171,98 @@ export class WontumFileInfo {
 
 		// Return calculated ratio
 		return `${ratioWidth}:${ratioHeight}`
+	}
+
+	/**
+	 * Detect frame rate by analyzing video playback
+	 */
+	private async detectFrameRate(): Promise<number | undefined> {
+		if (!this.videoElement) return undefined
+
+		try {
+			// Use requestVideoFrameCallback if available (Chrome/Edge)
+			if ("requestVideoFrameCallback" in this.videoElement) {
+				return new Promise((resolve) => {
+					let frameCount = 0
+					let lastTime = 0
+					const maxFrames = 10
+
+					const countFrames = (now: number, metadata: any) => {
+						if (!this.videoElement) {
+							resolve(undefined)
+							return
+						}
+
+						frameCount++
+
+						if (frameCount === 1) {
+							lastTime = now
+							;(this.videoElement as any).requestVideoFrameCallback(countFrames)
+						} else if (frameCount < maxFrames) {
+							;(this.videoElement as any).requestVideoFrameCallback(countFrames)
+						} else {
+							const elapsed = (now - lastTime) / 1000 // Convert to seconds
+							const fps = Math.round((frameCount - 1) / elapsed)
+							resolve(fps)
+						}
+					}
+
+					// Start playback to trigger frame callbacks
+					if (this.videoElement) {
+						this.videoElement.currentTime = 1 // Skip first second
+						this.videoElement.play().catch(() => resolve(undefined))
+						;(this.videoElement as any).requestVideoFrameCallback(countFrames)
+					} else {
+						resolve(undefined)
+					}
+				})
+			}
+
+			// Fallback: estimate from common frame rates
+			return undefined // Will be undefined if detection not supported
+		} catch (error) {
+			return undefined
+		}
+	}
+
+	/**
+	 * Detect audio channel information using Web Audio API
+	 */
+	private async detectAudioInfo(objectUrl: string): Promise<{ hasAudio: boolean; channels?: number }> {
+		if (!this.videoElement) return { hasAudio: false }
+
+		try {
+			// Check if video has audio tracks
+			const hasAudioTrack = this.videoElement.mozHasAudio || (this.videoElement.webkitAudioDecodedByteCount ?? 0) > 0 || (this.videoElement.audioTracks?.length ?? 0) > 0
+
+			if (!hasAudioTrack) {
+				return { hasAudio: false }
+			}
+
+			// Try to detect channel count using Web Audio API
+			try {
+				const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+				if (!AudioContextClass) {
+					return { hasAudio: true }
+				}
+
+				this.audioContext = new AudioContextClass()
+				const source = this.audioContext.createMediaElementSource(this.videoElement)
+				const analyser = this.audioContext.createAnalyser()
+				source.connect(analyser)
+				analyser.connect(this.audioContext.destination)
+
+				// Get channel count
+				const channels = source.channelCount
+
+				return { hasAudio: true, channels }
+			} catch (audioError) {
+				// Audio API not available or failed, but we know audio exists
+				return { hasAudio: true }
+			}
+		} catch (error) {
+			return { hasAudio: false }
+		}
 	}
 
 	/**
@@ -250,6 +363,18 @@ export class WontumFileInfo {
 		return this.info?.bitrate
 	}
 
+	public get frameRate(): number | undefined {
+		return this.info?.frameRate
+	}
+
+	public get audioChannels(): number | undefined {
+		return this.info?.audioChannels
+	}
+
+	public get hasAudio(): boolean {
+		return this.info?.hasAudio || false
+	}
+
 	public get quality(): string {
 		if (!this.info) return "unknown"
 
@@ -275,8 +400,13 @@ export class WontumFileInfo {
 	 */
 	public destroy(): void {
 		if (this.videoElement) {
+			this.videoElement.pause()
 			this.videoElement.remove()
 			this.videoElement = null
+		}
+		if (this.audioContext) {
+			this.audioContext.close().catch(() => {})
+			this.audioContext = null
 		}
 		this.info = null
 	}
