@@ -25,6 +25,7 @@ export default defineConfig({
 	plugins: [
 		dts({
 			insertTypesEntry: true,
+			exclude: ["src/test-app.tsx", "examples/**/*"],
 		}),
 	],
 })

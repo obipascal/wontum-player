@@ -6,7 +6,12 @@
 	"module": "dist/wontum-player.esm.js",
 	"types": "dist/index.d.ts",
 	"files": [
-		"dist"
+		"dist/wontum-player.esm.js",
+		"dist/wontum-player.cjs.js",
+		"dist/index.d.ts",
+		"dist/src/**/*.d.ts",
+		"!dist/src/test-app.d.ts",
+		"!dist/examples"
 	],
 	"scripts": {
 		"dev": "vite",
