@@ -122,37 +122,98 @@ npm install socket.io-client
 
 ```tsx
 import { WontumPlayerReact } from "@obipascal/player"
+import { useRef } from "react"
+import { WontumPlayer } from "@obipascal/player"
 
 function VideoPlayer() {
+	const playerRef = useRef<WontumPlayer | null>(null)
+
+	const handleReady = (player: WontumPlayer) => {
+		playerRef.current = player
+		console.log("Player is ready!")
+	}
+
+	const changeVideo = (newUrl: string) => {
+		if (playerRef.current) {
+			playerRef.current.updateSource(newUrl)
+		}
+	}
+
 	return (
-		<WontumPlayerReact
-			src="https://media.example.com/video/playlist.m3u8"
-			width="100%"
-			height="500px"
-			autoplay={false}
-			muted={false}
-			controls={true}
-			stickyControls={false}
-			subtitles={[
-				{
-					label: "English",
-					src: "https://example.com/subtitles/en.vtt",
-					srclang: "en",
-					default: true,
-				},
-			]}
-			theme={{
-				primaryColor: "#3b82f6",
-				accentColor: "#60a5fa",
-			}}
-			onPlay={() => console.log("Playing")}
-			onPause={() => console.log("Paused")}
-			onTimeUpdate={(time) => console.log("Time:", time)}
-			onSubtitleChange={(track) => console.log("Subtitle:", track)}
-		/>
+		<div>
+			<WontumPlayerReact
+				ref={playerRef}
+				src="https://media.example.com/video/playlist.m3u8"
+				width="100%"
+				height="500px"
+				autoplay={false}
+				muted={false}
+				controls={true}
+				stickyControls={false}
+				subtitles={[
+					{
+						label: "English",
+						src: "https://example.com/subtitles/en.vtt",
+						srclang: "en",
+						default: true,
+					},
+				]}
+				theme={{
+					primaryColor: "#3b82f6",
+					accentColor: "#60a5fa",
+				}}
+				onReady={handleReady}
+				onPlay={() => console.log("Playing")}
+				onPause={() => console.log("Paused")}
+				onTimeUpdate={(time) => console.log("Time:", time)}
+				onSubtitleChange={(track) => console.log("Subtitle:", track)}
+			/>
+
+			<button onClick={() => changeVideo("https://media.example.com/video2.m3u8")}>Change Video</button>
+		</div>
 	)
 }
 ```
+
+#### No Source Initialization (Load Later)
+
+You can initialize the player without a source and load it later:
+
+```tsx
+import { WontumPlayerReact } from "@obipascal/player"
+import { useRef, useState } from "react"
+import { WontumPlayer } from "@obipascal/player"
+
+function VideoPlayer() {
+	const playerRef = useRef<WontumPlayer | null>(null)
+	const [videoUrl, setVideoUrl] = useState<string | undefined>()
+
+	const handleReady = (player: WontumPlayer) => {
+		playerRef.current = player
+	}
+
+	const loadVideo = (url: string) => {
+		if (playerRef.current) {
+			playerRef.current.updateSource(url)
+			setVideoUrl(url)
+		}
+	}
+
+	return (
+		<div>
+			{/* Player initializes without source */}
+			<WontumPlayerReact ref={playerRef} width="100%" height="500px" controls={true} onReady={handleReady} />
+
+			<div>
+				<button onClick={() => loadVideo("https://media.example.com/video1.m3u8")}>Load Video 1</button>
+				<button onClick={() => loadVideo("https://media.example.com/video2.m3u8")}>Load Video 2</button>
+			</div>
+		</div>
+	)
+}
+```
+
+````
 
 ### React Hook (Custom Controls)
 
@@ -188,7 +249,7 @@ function CustomPlayer() {
 		</div>
 	)
 }
-```
+````
 
 ### React Context Provider
 

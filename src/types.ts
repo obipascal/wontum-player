@@ -4,8 +4,8 @@ import { Socket } from "socket.io-client"
  * Player configuration options
  */
 export interface WontumPlayerConfig {
-	/** The S3 URL or HLS manifest URL */
-	src: string
+	/** The S3 URL or HLS manifest URL (optional - can be set later with updateSource()) */
+	src?: string
 
 	/** Container element or selector */
 	container: HTMLElement | string

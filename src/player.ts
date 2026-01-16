@@ -56,7 +56,11 @@ export class WontumPlayer {
 
 		// Setup player
 		this.setupVideoListeners()
-		this.loadSource(config.src)
+
+		// Load source if provided
+		if (config.src) {
+			this.loadSource(config.src)
+		}
 
 		// Apply initial config
 		if (config.autoplay) this.videoElement.autoplay = true
@@ -221,6 +225,12 @@ export class WontumPlayer {
 
 	private async loadSource(src: string): Promise<void> {
 		try {
+			// Validate source
+			if (!src || src.trim() === "") {
+				console.warn("WontumPlayer: No video source provided")
+				return
+			}
+
 			// Check if URL needs S3 presigning
 			const videoUrl = await this.s3Handler.processUrl(src)
 
@@ -504,6 +514,10 @@ export class WontumPlayer {
 	 * @param src - New video source URL
 	 */
 	public async updateSource(src: string): Promise<void> {
+		// Validate source
+		if (!src || src.trim() === "") {
+			throw new Error("WontumPlayer: Cannot update to empty or invalid source")
+		}
 		// Pause current playback
 		this.pause()
 

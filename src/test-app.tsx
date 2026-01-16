@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import ReactDOM from "react-dom/client"
 import { WontumPlayerReact } from "./react"
+import { WontumPlayer } from "./player"
 
 // Inject global styles
 const styles = `
@@ -191,6 +192,7 @@ const videos = [
 function VideoPlayerTest() {
 	const [currentIndex, setCurrentIndex] = useState(0)
 	const [playerReady, setPlayerReady] = useState(false)
+	const playerRef = useRef<WontumPlayer | null>(null)
 
 	useEffect(() => {
 		log(`🎬 Component mounted with video: ${videos[currentIndex].title}`, "success")
@@ -198,6 +200,12 @@ function VideoPlayerTest() {
 
 	useEffect(() => {
 		log(`🔄 Video source changed to: ${videos[currentIndex].title}`, "warning")
+
+		// Use updateSource() method when changing videos
+		if (playerRef.current && currentIndex > 0) {
+			log(`📝 Calling updateSource() with: ${videos[currentIndex].url}`, "info")
+			playerRef.current.updateSource(videos[currentIndex].url)
+		}
 	}, [currentIndex])
 
 	const handlePrevious = () => {
@@ -216,8 +224,9 @@ function VideoPlayerTest() {
 		}
 	}
 
-	const handleReady = () => {
+	const handleReady = (player: WontumPlayer) => {
 		log(`✅ Player ready for: ${videos[currentIndex].title}`, "success")
+		playerRef.current = player
 		setPlayerReady(true)
 	}
 
@@ -245,7 +254,8 @@ function VideoPlayerTest() {
 		<div>
 			<div className="player-container">
 				<WontumPlayerReact
-					src={videos[currentIndex].url}
+					ref={playerRef}
+					src={videos[0].url}
 					width="100%"
 					height="100%"
 					controls

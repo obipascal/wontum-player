@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardRef } from "react"
 import { WontumPlayer } from "./player"
 import { WontumPlayerConfig, PlayerState, AnalyticsConfig, AnalyticsEvent } from "./types"
 import { WontumFileInfo, VideoFileInfo } from "./file-info"
@@ -34,8 +34,9 @@ export interface WontumPlayerReactProps extends Omit<WontumPlayerConfig, "contai
 
 /**
  * WontumPlayerReact - React component wrapper for WontumPlayer
+ * Use ref to access the player instance and call methods like updateSource()
  */
-export const WontumPlayerReact: React.FC<WontumPlayerReactProps> = (props) => {
+export const WontumPlayerReact = forwardRef<WontumPlayer | null, WontumPlayerReactProps>((props, ref) => {
 	const {
 		src,
 		autoplay,
@@ -66,6 +67,9 @@ export const WontumPlayerReact: React.FC<WontumPlayerReactProps> = (props) => {
 	const containerRef = useRef<HTMLDivElement>(null)
 	const playerRef = useRef<WontumPlayer | null>(null)
 
+	// Expose player instance to parent component via ref
+	useImperativeHandle(ref, () => playerRef.current as WontumPlayer, [playerRef.current])
+
 	// Initialize player
 	useEffect(() => {
 		if (!containerRef.current) return
@@ -83,7 +87,7 @@ export const WontumPlayerReact: React.FC<WontumPlayerReactProps> = (props) => {
 		}
 
 		const config: WontumPlayerConfig = {
-			src,
+			...(src && { src }),
 			container: containerRef.current,
 			autoplay,
 			muted,
@@ -163,7 +167,10 @@ export const WontumPlayerReact: React.FC<WontumPlayerReactProps> = (props) => {
 			}}
 		/>
 	)
-}
+})
+
+// Add display name for better debugging
+WontumPlayerReact.displayName = "WontumPlayerReact"
 
 /**
  * useWontumPlayer - React hook for imperative player control
