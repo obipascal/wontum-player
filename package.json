@@ -8,10 +8,7 @@
 	"files": [
 		"dist/wontum-player.esm.js",
 		"dist/wontum-player.cjs.js",
-		"dist/index.d.ts",
-		"dist/src/**/*.d.ts",
-		"!dist/src/test-app.d.ts",
-		"!dist/examples"
+		"dist/*.d.ts"
 	],
 	"scripts": {
 		"dev": "vite",
