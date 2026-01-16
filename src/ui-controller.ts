@@ -62,6 +62,11 @@ export class UIController {
 
 	private injectStyles(): void {
 		const styleId = "wontum-player-styles"
+
+		// Always add the container class, even if styles already exist
+		this.container.classList.add("wontum-player-container")
+
+		// Only inject styles once
 		if (document.getElementById(styleId)) return
 
 		const theme = this.player["config"].theme || {}
@@ -566,7 +571,6 @@ export class UIController {
     `
 
 		document.head.appendChild(style)
-		this.container.classList.add("wontum-player-container")
 	}
 
 	private createProgressBar(): void {

@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.12] - 2026-01-16
+
+### Fixed
+
+- **CRITICAL**: Fixed center controls (play button, skip forward/backward) not showing after video source change
+  - `wontum-player-container` CSS class now added before early return in `injectStyles()`
+  - Previously, the class was only added on first player instance, causing hover-based controls to fail on subsequent instances
+  - Center controls now properly visible on all video source changes
+
 ## [1.0.11] - 2026-01-16
 
 ### Fixed
