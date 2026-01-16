@@ -29,6 +29,9 @@ export class UIController {
 		this.container = container
 		this.player = player
 
+		// Ensure container is clean before initialization
+		this.container.classList.add("wontum-player-container")
+
 		this.injectStyles()
 
 		// Create progress bar separately
@@ -37,6 +40,7 @@ export class UIController {
 		this.controlsContainer = this.createControls()
 		this.container.appendChild(this.controlsContainer)
 
+		// Query elements - use fresh queries to ensure we get the newly created elements
 		this.playButton = this.controlsContainer.querySelector(".wontum-play-btn")!
 		this.skipBackwardButton = this.controlsContainer.querySelector(".wontum-skip-backward-btn")!
 		this.skipForwardButton = this.controlsContainer.querySelector(".wontum-skip-forward-btn")!
@@ -47,8 +51,15 @@ export class UIController {
 		this.settingsButton = this.controlsContainer.querySelector(".wontum-settings-btn")!
 		// this.timeDisplay = this.controlsContainer.querySelector(".wontum-time-display")!
 		this.volumeSlider = this.controlsContainer.querySelector(".wontum-volume-slider")! as HTMLInputElement
+
+		// Query from container to ensure we get the freshly created progress elements
 		this.progressInput = this.container.querySelector(".wontum-progress-input")! as HTMLInputElement
 		this.progressBar = this.container.querySelector(".wontum-progress-filled")!
+
+		if (!this.playButton || !this.progressInput || !this.progressBar) {
+			console.error("Failed to query UI elements. Container:", this.container)
+			throw new Error("Failed to initialize UI controller - elements not found")
+		}
 
 		// Check for sticky controls config
 		this.stickyControls = this.player["config"].stickyControls || false
@@ -63,10 +74,7 @@ export class UIController {
 	private injectStyles(): void {
 		const styleId = "wontum-player-styles"
 
-		// Always add the container class, even if styles already exist
-		this.container.classList.add("wontum-player-container")
-
-		// Only inject styles once
+		// Only inject styles once (class is added in constructor)
 		if (document.getElementById(styleId)) return
 
 		const theme = this.player["config"].theme || {}
