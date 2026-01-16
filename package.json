@@ -1,6 +1,6 @@
 {
 	"name": "@obipascal/player",
-	"version": "1.0.15",
+	"version": "1.0.16",
 	"description": "A modern HLS video player SDK for educational platforms with S3 integration",
 	"main": "dist/wontum-player.cjs.js",
 	"module": "dist/wontum-player.esm.js",
