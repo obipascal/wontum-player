@@ -498,6 +498,36 @@ export class WontumPlayer {
 		})
 	}
 
+	/**
+	 * Update video source without recreating the entire player
+	 * This is more efficient than destroying and recreating the player
+	 * @param src - New video source URL
+	 */
+	public async updateSource(src: string): Promise<void> {
+		// Pause current playback
+		this.pause()
+
+		// Reset state
+		this.state.currentTime = 0
+		this.state.ended = false
+		this.state.buffering = false
+
+		// Destroy existing HLS instance if present
+		if (this.hls) {
+			this.hls.destroy()
+			this.hls = null
+		}
+
+		// Update config
+		this.config.src = src
+
+		// Load new source
+		await this.loadSource(src)
+
+		// Emit source change event
+		this.emit("sourcechange", { src })
+	}
+
 	public destroy(): void {
 		if (this.hls) {
 			this.hls.destroy()

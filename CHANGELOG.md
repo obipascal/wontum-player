@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.11] - 2026-01-16
+
+### Fixed
+
+- **CRITICAL**: Fixed controls disappearing when `src` prop changes in `WontumPlayerReact` component
+  - UIController now properly removes progressContainer on destroy()
+  - React component adds comprehensive dependency array to handle all prop changes
+  - Added pre-cleanup to remove residual DOM elements before player reinitialization
+  - Fixed memory leak from accumulated controls and progress bars in DOM
+
+### Added
+
+- **New Method**: `player.updateSource(src)` - Efficiently change video source without full player reinitialization
+  - Better performance for video playlist/navigation scenarios
+  - Properly destroys HLS instance and resets state
+  - Emits `sourcechange` event when source changes
+- **New Event**: `sourcechange` - Fires when video source is updated via `updateSource()`
+- **React Enhancement**: Full dependency tracking in `WontumPlayerReact` useEffect for robust prop change handling
+- **Documentation**: Added extensive guide for handling video source changes in React
+- **Documentation**: Added `updateSource()` method examples and best practices
+
+### Changed
+
+- React component now properly cleans up all DOM elements (video, controls, progress bars) before reinitialization
+- Improved null safety in destroy cleanup functions
+
 ## [1.0.0] - 2026-01-10
 
 ### Added

@@ -1170,6 +1170,69 @@ type PlayerEventType =
 />
 ```
 
+**Important: Changing Video Source**
+
+The `WontumPlayerReact` component properly handles video source changes. When you update the `src` prop, the player will:
+
+- ✅ Clean up the previous player instance completely
+- ✅ Remove all DOM elements (controls, progress bars)
+- ✅ Reinitialize with the new video source
+- ✅ Maintain control visibility and functionality
+
+```tsx
+function VideoModal() {
+	const [currentVideo, setCurrentVideo] = useState("video1.m3u8")
+
+	return (
+		<WontumPlayerReact
+			src={currentVideo} // ✅ Simply change the src - no need for React key tricks!
+			width="100%"
+			height="100%"
+			controls
+			stickyControls
+		/>
+	)
+}
+```
+
+**Advanced: Using updateSource() for Better Performance**
+
+For even better performance when changing sources, you can use the `updateSource()` method via the `onReady` callback:
+
+```tsx
+function VideoPlayer() {
+	const [videos] = useState(["https://example.com/video1.m3u8", "https://example.com/video2.m3u8", "https://example.com/video3.m3u8"])
+	const [currentIndex, setCurrentIndex] = useState(0)
+	const playerRef = useRef<WontumPlayer | null>(null)
+
+	const handleReady = (player: WontumPlayer) => {
+		playerRef.current = player
+	}
+
+	const switchVideo = async (index: number) => {
+		if (playerRef.current) {
+			// Use updateSource for efficient source changes (no full reinitialization)
+			await playerRef.current.updateSource(videos[index])
+			setCurrentIndex(index)
+		}
+	}
+
+	return (
+		<div>
+			<WontumPlayerReact src={videos[currentIndex]} width="100%" height="500px" onReady={handleReady} />
+
+			<div>
+				{videos.map((_, index) => (
+					<button key={index} onClick={() => switchVideo(index)} disabled={index === currentIndex}>
+						Video {index + 1}
+					</button>
+				))}
+			</div>
+		</div>
+	)
+}
+```
+
 #### useWontumPlayer Hook
 
 ```tsx
@@ -1684,10 +1747,11 @@ For detailed API documentation including all methods, events, types, and configu
 - **Playback Rate:** `setPlaybackRate(rate)`
 - **Fullscreen:** `enterFullscreen()`, `exitFullscreen()`
 - **Picture-in-Picture:** `enterPictureInPicture()`, `exitPictureInPicture()`, `togglePictureInPicture()`
+- **Source Management:** `updateSource(src)` - _Efficiently change video source without full reinitialization_
 - **State:** `getState()`, `getCurrentTime()`, `getDuration()`
 - **Lifecycle:** `destroy()`
 
-**Events (25 total):**
+**Events (26 total):**
 
 - **Playback:** `play`, `pause`, `ended`, `timeupdate`, `durationchange`
 - **Loading:** `loadstart`, `loadedmetadata`, `loadeddata`, `canplay`, `canplaythrough`
@@ -1695,6 +1759,7 @@ For detailed API documentation including all methods, events, types, and configu
 - **Seeking:** `seeking`, `seeked`
 - **Volume:** `volumechange`
 - **Quality:** `qualitychange`, `renditionchange`
+- **Source:** `sourcechange` - _Fires when video source is changed via updateSource()_
 - **Errors:** `error`
 - **Playback Rate:** `ratechange`
 - **Fullscreen:** `fullscreenchange`

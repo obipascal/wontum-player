@@ -1078,6 +1078,14 @@ export class UIController {
 		if (this.hideControlsTimeout) {
 			clearTimeout(this.hideControlsTimeout)
 		}
-		this.controlsContainer.remove()
+
+		// Remove all UI elements
+		if (this.controlsContainer) {
+			this.controlsContainer.remove()
+		}
+
+		if (this.progressContainer) {
+			this.progressContainer.remove()
+		}
 	}
 }

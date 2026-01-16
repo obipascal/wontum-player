@@ -70,6 +70,18 @@ export const WontumPlayerReact: React.FC<WontumPlayerReactProps> = (props) => {
 	useEffect(() => {
 		if (!containerRef.current) return
 
+		// Clean up any residual DOM elements from previous instances
+		if (containerRef.current) {
+			// Remove any leftover player elements
+			const videoElements = containerRef.current.querySelectorAll(".wontum-player-video")
+			const controlElements = containerRef.current.querySelectorAll(".wontum-controls")
+			const progressElements = containerRef.current.querySelectorAll(".wontum-progress-container")
+
+			videoElements.forEach((el) => el.remove())
+			controlElements.forEach((el) => el.remove())
+			progressElements.forEach((el) => el.remove())
+		}
+
 		const config: WontumPlayerConfig = {
 			src,
 			container: containerRef.current,
@@ -111,10 +123,34 @@ export const WontumPlayerReact: React.FC<WontumPlayerReactProps> = (props) => {
 
 		// Cleanup
 		return () => {
-			player.destroy()
-			playerRef.current = null
+			if (playerRef.current) {
+				playerRef.current.destroy()
+				playerRef.current = null
+			}
 		}
-	}, [src]) // Re-initialize only when src changes
+	}, [
+		src,
+		autoplay,
+		muted,
+		controls,
+		poster,
+		preload,
+		theme,
+		s3Config,
+		analytics,
+		hlsConfig,
+		subtitles,
+		stickyControls,
+		onPlay,
+		onPause,
+		onEnded,
+		onError,
+		onLoadedMetadata,
+		onQualityChange,
+		onTimeUpdate,
+		onVolumeChange,
+		onReady,
+	]) // Re-initialize when any config changes
 
 	return (
 		<div

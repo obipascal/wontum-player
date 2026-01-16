@@ -205,6 +205,7 @@ export type PlayerEventType =
 	| "pictureinpictureenter"
 	| "pictureinpictureexit"
 	| "resize"
+	| "sourcechange"
 
 export interface PlayerEvent {
 	type: PlayerEventType
